@@ -7,6 +7,9 @@ export const authOptions = {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET
       })
   ],
-  secret: process.env.JWT_SECRET //watch another video about google provider, i think they use a token to login rather than a callback page
+  secret: process.env.JWT_SECRET ,
+  pages: {
+    signIn: '/signin'
+  }
 }
 export default NextAuth(authOptions)
