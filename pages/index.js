@@ -1,7 +1,8 @@
 import {useSession, signOut } from 'next-auth/react'
 import {useRouter} from 'next/router'
+import Loading from '../components/loading'
 function Home() {
-    const { data: session } = useSession()
+    const { data: session, status} = useSession()
     const { push, asPath} = useRouter()
     async function handleSignOut()
     {
@@ -11,6 +12,10 @@ function Home() {
     function handleSignIn()
     {
         push("/signin?callbackUrl=" + asPath)
+    }
+    if(status === "loading")
+    {
+        return <Loading />
     }
     if(session)
     {
