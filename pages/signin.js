@@ -1,19 +1,41 @@
-import {useSession, signIn } from 'next-auth/react'
+import {useSession, signIn, signOut } from 'next-auth/react'
 import {useRouter} from 'next/router'
+import { useEffect } from 'react'
 import Loading from '../components/loading'
+import axios from '../utils/axiosConfig'
 function SignIn() {
     const router = useRouter()
     const {data: session, status } = useSession()
+    useEffect(() => {
+        async function updateUser()
+        {
+            const response = await axios.post("user/updateUser", {
+                user_data: session.user
+            })
+            if(response.data.message !== "success")
+            {
+                signOut()
+                alert("Error")
+                return
+            }
+            setTimeout(()=>{
+
+                router.push(router.query?.callbackUrl || "/")
+            }, 1000)
+        }
+        if(session)
+        {
+            updateUser()
+        }
+    }, [session])
+    
     if(status === "loading")
     {
         return <Loading />
     }
     if(session)
     {
-        setTimeout(()=>{
-
-            router.push(router.query?.callbackUrl || "/")
-        }, 1000)
+        //useEffect handles the rest
         return <Loading />
     }
     return (
