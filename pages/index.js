@@ -10,24 +10,21 @@ function Home() {
     const [userInfo, setUserInfo] = useState({})
     useEffect(() => {
         async function updateUser() {
-            try
-            {
-            const response = await axios.post("user/getUserInfo", {
-                email: session.user.email
-            })
-            if (response.data.message !== "success") {
-                signOut()
-                alert("Error")
-                return
+            try {
+                const response = await axios.post("user/getUserInfo", {
+                    email: session.user.email
+                })
+                if (response.data.message !== "success") {
+                    signOut()
+                    alert("Error")
+                    return
+                }
+                setUserInfo(response.data.data)
             }
-            setUserInfo(response.data.data)
-        }
-        catch(err)
-        {
-            console.log(err)
-            signOut()
-            return
-        }
+            catch (err) {
+                console.log(err)
+                //signOut()
+            }
         }
         if (session) {
             updateUser()
