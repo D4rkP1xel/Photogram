@@ -1,4 +1,4 @@
 import axios from 'axios'
 
 
-export default axios.create({baseURL: process.env.BACKEND_API_URL || 'http://localhost:3001'})
+export default axios.create({baseURL: process.env.BACKEND_API_URL /*|| 'http://localhost:3001'*/})
