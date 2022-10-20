@@ -44,6 +44,7 @@ function Home() {
         return (
             <>
                 <Header userInfo={userInfo} />
+                <div>{process.env.BACKEND_API_URL}</div>
                 <button onClick={handleSignOut} className='border-solid border-purple-600 border-2'>Sign Out</button>
             </>
 
