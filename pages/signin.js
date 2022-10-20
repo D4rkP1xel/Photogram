@@ -24,6 +24,7 @@ function SignIn() {
             </div>
 
             <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google", {callbackUrl: process.env.VERCEL_URL}) }>
+                
                 <img className="h-6" src="/google-logo.png" alt="google-logo" />
                 <span className="py-2">Sign in with Google</span>
             </div>
