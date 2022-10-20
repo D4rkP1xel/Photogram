@@ -23,7 +23,7 @@ function SignIn() {
                 <img className="h-48" src="/login-icon.png" />
             </div>
 
-            <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google", {callbackUrl: process.env.NEXTAUTH_URL + "/verify?provider=google"}) }>
+            <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google", {callbackUrl: process.env.VERCEL_URL + "/verify?provider=google"}) }>
                 <img className="h-6" src="/google-logo.png" alt="google-logo" />
                 <span className="py-2">Sign in with Google</span>
             </div>
