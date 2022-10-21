@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Header from '../components/header'
 import Loading from '../components/loading'
-import axios from '../utils/axiosConfig'
+import axios from 'axios'
 function Home() {
     const { data: session, status } = useSession()
     const { push, asPath } = useRouter()
@@ -11,7 +11,7 @@ function Home() {
     useEffect(() => {
         async function updateUser() {
             try {
-                const response = await axios.post("user/getUserInfo", {
+                const response = await axios.post("https://photogram-backend-production.up.railway.app/user/getUserInfo", {
                     email: session.user.email
                 })
                 if (response.data.message !== "success") {
