@@ -2,7 +2,7 @@ import {useSession, signIn, signOut } from 'next-auth/react'
 import {useRouter} from 'next/router'
 import { useEffect } from 'react'
 import Loading from '../../components/loading'
-import axios from '../../utils/axiosConfig'
+import axios from 'axios'
 
 function Index() {                  // example: /verify?provider=google -> check in db if provider exists
     const router = useRouter()
@@ -15,7 +15,7 @@ function Index() {                  // example: /verify?provider=google -> check
     useEffect(() => {
         async function updateUser()
         {
-            const response = await axios.post("user/updateUser", {
+            const response = await axios.post("https://photogram-backend-production.up.railway.app/user/updateUser", {
                 user_data: session.user,
                 provider: router.query.provider
             })
