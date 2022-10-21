@@ -11,7 +11,7 @@ function Home() {
     useEffect(() => {
         async function updateUser() {
             try {
-                const response = await axios.post(process.env.BACKEND + "/user/getUserInfo", {
+                const response = await axios.post("https://photogram-backend-production.up.railway.app/user/getUserInfo", {
                     email: session.user.email
                 })
                 if (response.data.message !== "success") {
