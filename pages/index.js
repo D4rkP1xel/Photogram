@@ -11,7 +11,7 @@ function Home() {
     useEffect(() => {
         async function updateUser() {
             try {
-                const response = await axios.post(process.env.BACKEND_API_URL + "/user/getUserInfo", {
+                const response = await axios.post(process.env.BACKEND + "/user/getUserInfo", {
                     email: session.user.email
                 })
                 if (response.data.message !== "success") {
