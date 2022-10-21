@@ -1,8 +1,8 @@
-import {useSession, signIn, signOut } from 'next-auth/react'
+import {useSession, signIn } from 'next-auth/react'
 import {useRouter} from 'next/router'
-import { useEffect } from 'react'
+
 import Loading from '../components/loading'
-import axios from '../utils/axiosConfig'
+
 function SignIn() {
     const router = useRouter()
     const {data: session, status } = useSession()
