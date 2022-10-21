@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from '../utils/axiosConfig'
+import axios from 'axios'
 
 function Test() {
 
@@ -28,7 +28,7 @@ function Test() {
         reader.readAsDataURL(imageToUpload)
         reader.onloadend = async () => {
             try {
-                const response = await axios.post("/images/upload", {
+                const response = await axios.post("https://photogram-backend-production.up.railway.app/images/upload", {
                     image: reader.result
                 })
                 console.log(response)
