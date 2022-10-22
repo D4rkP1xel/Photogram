@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import React, { useEffect } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
-import axios from 'axios'
+import axios from '../../utils/axiosConfig'
 
 function ProviderPage() { // example: /verify/google -> page to ask the user if he wants to link accounts
   const router = useRouter()
@@ -21,7 +21,7 @@ function ProviderPage() { // example: /verify/google -> page to ask the user if 
 
   async function addProvider() {
     try {
-      const response = await axios.post("https://photogram-backend-production.up.railway.app/user/addProvider", {
+      const response = await axios.post("/user/addProvider", {
         provider: provider,
         email: session.user.email
       })
