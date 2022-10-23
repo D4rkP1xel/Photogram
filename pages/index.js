@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Header from '../components/header'
 import Loading from '../components/loading'
-import MainContent from '../components/mainContent'
+import MainContent from '../components/mainPage/mainContent'
 
 import axios from '../utils/axiosConfig'
 function Home() {

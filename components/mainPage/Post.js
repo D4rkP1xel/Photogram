@@ -1,10 +1,9 @@
 import React from 'react'
 import {IoMdHeartEmpty} from 'react-icons/io'
 import {BsChat} from 'react-icons/bs'
-function MainContent() {
-    return (
-        <div className='w-[500px] mx-auto'>
-            <div className='w-full my-10'>
+function Post() {
+  return (
+    <div className='w-full my-10'>
                 <div className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
                     <div className='h-12 w-12 bg-slate-50 rounded-full'></div>
                     <div className='mx-4 font-semibold cursor-pointer select-none'>D4rkP1xel</div>
@@ -21,9 +20,7 @@ function MainContent() {
                     <div className="text-xs text-slate-400 mt-2">3 DAYS AGO</div>
                 </div>
             </div>
-            <div className='bg-slate-200 w-full h-96'></div>
-        </div>
-    )
+  )
 }
 
-export default MainContent
+export default Post
