@@ -6,7 +6,8 @@ import Loading from '../components/loading'
 import Header from '../components/header'
 import { BsFillFileEarmarkImageFill, BsXLg } from 'react-icons/bs'
 import { useState, useRef } from 'react'
-function addPost() {
+
+function AddPost() {
   const { data: session } = useSession()
   const router = useRouter()
   const { data: userInfo } = useQuery(["user_info"], async () => {
@@ -95,4 +96,4 @@ function addPost() {
   return (<Loading />)
 }
 
-export default addPost
+export default AddPost
