@@ -43,8 +43,11 @@ function AddPost() {
     reader.readAsDataURL(imageToUpload)
     reader.onloadend = async () => {
       try {
-        const response = await axios.post("/images/upload", {
-          image: reader.result
+        const response = await axios.post("/posts/newPost", {
+          image: reader.result,
+          user_id: userInfo.id,
+          description: "",
+          tags: [],
         })
         console.log(response)
       }
@@ -95,7 +98,7 @@ function AddPost() {
             </div>
 
 
-            <div className='flex w-fit justify-center bg-slate-200 py-4 px-10 rounded-full select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in md:mx-0 md:mt-auto mx-auto mb-4'>
+            <div onClick={async()=>await submitImage()} className='flex w-fit justify-center bg-slate-200 py-4 px-10 rounded-full select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in md:mx-0 md:mt-auto mx-auto mb-4'>
               <div className='font-normal my-auto'>Publish photo</div>
             </div>
           </div>
