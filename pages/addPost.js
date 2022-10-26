@@ -10,6 +10,7 @@ import { useState, useRef } from 'react'
 function AddPost() {
   const { data: session } = useSession()
   const router = useRouter()
+  const [description, setDescription] = useState("")
   const { data: userInfo } = useQuery(["user_info"], async () => {
     return axios.post("/user/getUserInfo", {
       email: session.user.email
@@ -20,6 +21,11 @@ function AddPost() {
   const [imageToUpload, setImageToUpload] = useState(null)
   const [imageToPreview, setImageToPreview] = useState(null)
 
+
+  function handleDescription(e)
+  {
+    setDescription(e.target.value)
+  }
   function handleChangeImage(event) {
     setImageToUpload(event.target.files[0])
 
@@ -46,7 +52,7 @@ function AddPost() {
         const response = await axios.post("/posts/newPost", {
           image: reader.result,
           user_id: userInfo.id,
-          description: "",
+          description: description,
           tags: [],
         })
         console.log(response)
@@ -84,7 +90,7 @@ function AddPost() {
 
           <div className='w-10/12 mx-auto md:flex md:flex-col'>
             <div className='font-bold text-xl mb-2 mt-8'>Description</div>
-            <textarea className='border border-slate-300 rounded-xl w-full px-2' rows={3} placeholder={"Add a description... (optional)"}></textarea>
+            <textarea onChange={handleDescription} className='border border-slate-300 rounded-xl w-full px-2' rows={3} placeholder={"Add a description... (optional)"}></textarea>
 
             <div className='font-bold text-xl mt-4'>Tags</div>
 
