@@ -5,12 +5,14 @@ import { useSession } from 'next-auth/react'
 import Loading from '../components/loading'
 import Header from '../components/header'
 import { BsFillFileEarmarkImageFill, BsXLg, BsPlusLg } from 'react-icons/bs'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function AddPost() {
   const { data: session } = useSession()
   const router = useRouter()
   const [description, setDescription] = useState("")
+  const [tags, setTags] = useState([])
+  const [currentTag, setCurrentTag] = useState("")
   const { data: userInfo } = useQuery(["user_info"], async () => {
     return axios.post("/user/getUserInfo", {
       email: session.user.email
@@ -18,10 +20,29 @@ function AddPost() {
   }, { enabled: !!session })
 
   const uploadImageRef = useRef(null)
+  const tagRef = useRef(null)
+  const submitTagRef = useRef(null)
   const [imageToUpload, setImageToUpload] = useState(null)
   const [imageToPreview, setImageToPreview] = useState(null)
 
-
+  function handleTags(e)
+  {
+    e.preventDefault()
+    if(currentTag !== "")
+    {
+      setTags(...tags, currentTag)
+      setCurrentTag("")
+      tagRef.current.value = ""
+    }
+      
+  }
+  function handleChangeTag(e)
+  {
+    setCurrentTag(e.target.value)
+  }
+  useEffect(()=>{
+    console.log(tags)
+  },[tags])
   function handleDescription(e)
   {
     setDescription(e.target.value)
@@ -53,7 +74,7 @@ function AddPost() {
           image: reader.result,
           user_id: userInfo.id,
           description: description,
-          tags: [],
+          tags: tags,
         })
         console.log(response)
       }
@@ -95,10 +116,14 @@ function AddPost() {
             <div className='font-bold text-xl mt-4'>Tags</div>
 
             <div className='flex gap-8 mb-20 mt-4 items-center'>
-              <input type={"text"} className='h-fit border border-slate-300 rounded-full w-6/12 px-2 ' placeholder={"Add tag... (optional)"} />
+              <form onSubmit={handleTags} className="m-0 p-0 box-border">
+                <input onChange={handleChangeTag} ref={tagRef} type={"text"} className='h-fit border border-slate-300 rounded-full w-full px-2 ' placeholder={"Add tag... (optional)"} />
+                <input ref={submitTagRef} type={"submit"} className="hidden" />
+              </form>
               <div className='flex h-fit py-2 w-fit justify-center bg-slate-200 px-4 rounded-full gap-2 select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in'>
                 <BsPlusLg className='text-slate-400 my-auto h-4 w-4' />
-                <div className='h-fit text-sm'>Add</div>
+                <div className='h-fit text-sm' onClick={()=>submitTagRef.current.click()}>Add</div>
+                
               </div>
 
             </div>
@@ -106,6 +131,7 @@ function AddPost() {
 
             <div onClick={async()=>await submitImage()} className='flex w-fit justify-center bg-slate-200 py-4 px-10 rounded-full select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in md:mx-0 md:mt-auto mx-auto mb-4'>
               <div className='font-normal my-auto'>Publish photo</div>
+              
             </div>
           </div>
 
