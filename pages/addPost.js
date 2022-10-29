@@ -30,19 +30,21 @@ function AddPost() {
     e.preventDefault()
     if(currentTag !== "")
     {
-      setTags(...tags, currentTag)
+      setTags([...tags, currentTag])
       setCurrentTag("")
       tagRef.current.value = ""
     }
-      
   }
   function handleChangeTag(e)
   {
     setCurrentTag(e.target.value)
   }
-  useEffect(()=>{
-    console.log(tags)
-  },[tags])
+  function removeTag(index)
+  {
+      let newTags = tags
+      newTags.splice(index, 1)
+      setTags([...newTags])
+  }
   function handleDescription(e)
   {
     setDescription(e.target.value)
@@ -115,21 +117,28 @@ function AddPost() {
 
             <div className='font-bold text-xl mt-4'>Tags</div>
 
-            <div className='flex gap-8 mb-20 mt-4 items-center'>
+            <div className='flex gap-8 mb-10 mt-4 items-center'>
               <form onSubmit={handleTags} className="m-0 p-0 box-border">
                 <input onChange={handleChangeTag} ref={tagRef} type={"text"} className='h-fit border border-slate-300 rounded-full w-full px-2 ' placeholder={"Add tag... (optional)"} />
                 <input ref={submitTagRef} type={"submit"} className="hidden" />
               </form>
-              <div className='flex h-fit py-2 w-fit justify-center bg-slate-200 px-4 rounded-full gap-2 select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in'>
+              <div onClick={()=>submitTagRef.current.click()} className='flex h-fit py-2 w-fit justify-center bg-slate-200 px-4 rounded-full gap-2 select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in'>
                 <BsPlusLg className='text-slate-400 my-auto h-4 w-4' />
-                <div className='h-fit text-sm' onClick={()=>submitTagRef.current.click()}>Add</div>
-                
+                <div className='h-fit text-sm'>Add</div>      
               </div>
-
+            </div>
+            <div className='flex gap-4 flex-wrap mb-20'>
+              {tags.map((tag, index)=>{
+              return (
+                <div key={index} className='py-2 px-4 rounded-full bg-slate-200 flex gap-2 items-center'>
+                  <div className='cursor-default'>{tag}</div>
+                  <BsXLg onClick={()=>removeTag(index)} className='text-slate-400 my-auto h-7 w-11 cursor-pointer py-2 px-4 relative left-4' />
+                </div>
+              )
+            } )}
             </div>
 
-
-            <div onClick={async()=>await submitImage()} className='flex w-fit justify-center bg-slate-200 py-4 px-10 rounded-full select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in md:mx-0 md:mt-auto mx-auto mb-4'>
+            <div onClick={async()=>await submitImage()} className='flex w-fit justify-center bg-slate-200 py-4 px-10 rounded-full select-none cursor-pointer shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in md:mx-0 md:mt-auto mx-auto md:mb-4 mb-6'>
               <div className='font-normal my-auto'>Publish photo</div>
               
             </div>

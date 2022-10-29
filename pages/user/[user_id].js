@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Header from '../../components/header'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +9,7 @@ import ProfileContent from '../../components/profilePage/ProfileContent'
 function UserProfilePage() {
     const { data: session } = useSession()
     const router = useRouter()
+   
     const { user_id } = router.query
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
@@ -20,17 +21,16 @@ function UserProfilePage() {
 
     useEffect(() => {
         if (userInfo && user_id) {
-            if (user_id === userInfo.id)
                 refreshProfileInfo()
         }
 
     }, [user_id, userInfo])
     if (session && userInfo) {
+        
         return (
             <>
                 <Header userInfo={userInfo} />
-                <ProfileContent profileInfo={profileInfo} />
-                
+                <ProfileContent profileInfo={profileInfo} userInfo={userInfo}/>
             </>
         )
 

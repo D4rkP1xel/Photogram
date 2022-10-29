@@ -1,7 +1,7 @@
-import {BsFillCameraFill} from 'react-icons/bs'
+import {BsFillCameraFill, BsFillPersonPlusFill} from 'react-icons/bs'
 import { useRouter } from 'next/router'
 
-function ProfileContent({ profileInfo }) {
+function ProfileContent({ profileInfo, userInfo }) {
     const router = useRouter()
     return (
         <>
@@ -18,12 +18,24 @@ function ProfileContent({ profileInfo }) {
                         <div className='mt-4'>Bro/King</div>
                     </div>
                 </div>
-                 <div className='w-full flex flex-row-reverse'> {/*add photo button*/}
+                {userInfo?.id && profileInfo?.id ? 
+                userInfo.id === profileInfo.id ?
+                <div className='w-full flex flex-row-reverse'> {/*add photo button*/}
                     <div onClick={()=>router.push("/addPost")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
                         <BsFillCameraFill className='h-4 w-4 my-auto'/>
                         <div className='my-auto'>Share Photo</div>
                     </div>
                 </div>
+                :
+                <div className='w-full flex flex-row-reverse'> {/*follow button*/}
+                    <div onClick={()=>router.push("/addPost")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
+                        <BsFillPersonPlusFill className='h-4 w-4 my-auto'/>
+                        <div className='my-auto'>Follow</div>
+                    </div>
+                </div>
+                : ""   //is loading
+            }
+                 
                 <hr className='mb-12 mt-4' />
                 <div className='grid grid-cols-3 sm:gap-4 gap-1'>
                     <div className='bg-slate-200 w-full aspect-square'></div>
