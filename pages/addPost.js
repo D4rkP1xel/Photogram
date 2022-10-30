@@ -13,6 +13,7 @@ function AddPost() {
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState([])
   const [currentTag, setCurrentTag] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const { data: userInfo } = useQuery(["user_info"], async () => {
     return axios.post("/user/getUserInfo", {
       email: session.user.email
@@ -28,7 +29,7 @@ function AddPost() {
   function handleTags(e)
   {
     e.preventDefault()
-    if(currentTag !== "")
+    if(currentTag !== "" && currentTag.length <= 24 && tags.indexOf(currentTag) === -1)
     {
       setTags([...tags, currentTag])
       setCurrentTag("")
@@ -38,6 +39,10 @@ function AddPost() {
   function handleChangeTag(e)
   {
     setCurrentTag(e.target.value)
+    if(e.target.value.length > 24)
+      setErrorMessage("Tag is too long")
+    else
+      setErrorMessage("")
   }
   function removeTag(index)
   {
@@ -117,7 +122,7 @@ function AddPost() {
 
             <div className='font-bold text-xl mt-4'>Tags</div>
 
-            <div className='flex gap-8 mb-10 mt-4 items-center'>
+            <div className='flex gap-8 mb-2 mt-4 items-center'>
               <form onSubmit={handleTags} className="m-0 p-0 box-border">
                 <input onChange={handleChangeTag} ref={tagRef} type={"text"} className='h-fit border border-slate-300 rounded-full w-full px-2 ' placeholder={"Add tag... (optional)"} />
                 <input ref={submitTagRef} type={"submit"} className="hidden" />
@@ -127,6 +132,7 @@ function AddPost() {
                 <div className='h-fit text-sm'>Add</div>      
               </div>
             </div>
+            <div className='text-sm text-red-600 mb-8'>{errorMessage}</div>
             <div className='flex gap-4 flex-wrap mb-20'>
               {tags.map((tag, index)=>{
               return (

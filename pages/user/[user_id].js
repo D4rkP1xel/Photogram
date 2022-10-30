@@ -30,7 +30,7 @@ function UserProfilePage() {
         return (
             <>
                 <Header userInfo={userInfo} />
-                <ProfileContent profileInfo={profileInfo} userInfo={userInfo}/>
+                <ProfileContent profileInfo={profileInfo} userInfo={userInfo} posts={posts}/>
             </>
         )
 
