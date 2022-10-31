@@ -13,7 +13,8 @@ function AddPost() {
   const [description, setDescription] = useState("")
   const [tags, setTags] = useState([])
   const [currentTag, setCurrentTag] = useState("")
-  const [errorMessage, setErrorMessage] = useState("")
+  const [tagErrorMessage, setTagErrorMessage] = useState("")
+  const [descriptionErrorMessage, setDescriptionErrorMessage] = useState("")
   const { data: userInfo } = useQuery(["user_info"], async () => {
     return axios.post("/user/getUserInfo", {
       email: session.user.email
@@ -40,9 +41,9 @@ function AddPost() {
   {
     setCurrentTag(e.target.value)
     if(e.target.value.length > 24)
-      setErrorMessage("Tag is too long")
+      setTagErrorMessage("Tag is too long")
     else
-      setErrorMessage("")
+      setTagErrorMessage("")
   }
   function removeTag(index)
   {
@@ -53,6 +54,10 @@ function AddPost() {
   function handleDescription(e)
   {
     setDescription(e.target.value)
+    if(e.target.value.length > 1000)
+      setDescriptionErrorMessage("Description is too long")
+    else
+      setDescriptionErrorMessage("")
   }
   function handleChangeImage(event) {
     setImageToUpload(event.target.files[0])
@@ -67,6 +72,11 @@ function AddPost() {
   async function submitImage() {
     if (imageToUpload === null) {
       alert("No image selected")
+      return
+    }
+    if(descriptionErrorMessage !== "")
+    {
+      alert("Description is too long")
       return
     }
     if (imageToUpload.size >= 3000000) {
@@ -84,6 +94,8 @@ function AddPost() {
           tags: tags,
         })
         console.log(response)
+        alert("Image published!")
+        router.push("/user/" + userInfo.id)
       }
       catch (err) {
         console.log(err)
@@ -119,8 +131,8 @@ function AddPost() {
           <div className='w-10/12 mx-auto md:flex md:flex-col'>
             <div className='font-bold text-xl mb-2 mt-8'>Description</div>
             <textarea onChange={handleDescription} className='border border-slate-300 rounded-xl w-full px-2' rows={3} placeholder={"Add a description... (optional)"}></textarea>
-
-            <div className='font-bold text-xl mt-4'>Tags</div>
+            <div className='text-sm text-red-600 mt-2 mb-8'>{descriptionErrorMessage}</div>
+            <div className='font-bold text-xl'>Tags</div>
 
             <div className='flex gap-8 mb-2 mt-4 items-center'>
               <form onSubmit={handleTags} className="m-0 p-0 box-border">
@@ -132,7 +144,7 @@ function AddPost() {
                 <div className='h-fit text-sm'>Add</div>      
               </div>
             </div>
-            <div className='text-sm text-red-600 mb-8'>{errorMessage}</div>
+            <div className='text-sm text-red-600 mb-8'>{tagErrorMessage}</div>
             <div className='flex gap-4 flex-wrap mb-20'>
               {tags.map((tag, index)=>{
               return (
