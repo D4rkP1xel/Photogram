@@ -2,6 +2,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Header from '../components/header'
+import HeaderNotLogged from '../components/headerNotLogged'
 import Loading from '../components/loading'
 import MainContent from '../components/mainPage/mainContent'
 
@@ -36,13 +37,11 @@ function Home() {
         const signOutData = await signOut({ redirect: false, callbackUrl: "/" })
         push(signOutData.url)
     }
-    function handleSignIn() {
-        push("/signin?callbackUrl=" + asPath)
-    }
+    
     if (status === "loading") {
         return <Loading />
     }
-    if (session) {
+    if (status === "authenticated") {
         return (
             <>
                 <Header userInfo={userInfo} />
@@ -53,10 +52,10 @@ function Home() {
     }
     else {
         return (
-            <div>
-                <h1>not logged in</h1>
-                <button onClick={handleSignIn} className='border-solid border-purple-600 border-2 rounded-lg p-1 bg-purple-100'>Sign In</button>
-            </div>
+            <>
+                <HeaderNotLogged />
+                <MainContent />
+            </>
         )
     }
 }
