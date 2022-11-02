@@ -1,11 +1,16 @@
-import { BsFillCameraFill, BsFillPersonPlusFill } from 'react-icons/bs'
+import { BsFillCameraFill, BsFillPersonPlusFill, BsFillPersonDashFill } from 'react-icons/bs'
 import { useRouter } from 'next/router'
+import axios from '../../utils/axiosConfig'
+import { useQuery } from '@tanstack/react-query'
 
 function ProfileContent({ profileInfo, userInfo, posts }) {
     const router = useRouter()
+    const { data: isFollowing } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo })
+
     return (
         <>
             {posts ? console.log(posts) : ""}
+            {isFollowing ? console.log(isFollowing) : ""}
             <div className='sm:w-[600px] w-full mx-auto mt-8'>
                 <div className='flex sm:w-10/12 w-full mx-auto sm:justify-start justify-around'>
                     <img className='rounded-full sm:h-40 h-32' src={profileInfo?.photo_url} alt={profileInfo?.username + " photo"} referrerPolicy="no-referrer" />
@@ -28,11 +33,23 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                             </div>
                         </div>
                         :
+                        isFollowing ?
                         <div className='w-full flex flex-row-reverse'> {/*follow button*/}
-                            <div onClick={() => router.push("/addPost")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
+                            {isFollowing === true ?
+                            <div onClick={() => console.log("add following")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
                                 <BsFillPersonPlusFill className='h-4 w-4 my-auto' />
                                 <div className='my-auto'>Follow</div>
                             </div>
+                            :
+                            <div onClick={() => console.log("remove following")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
+                                <BsFillPersonDashFill className='h-4 w-4 my-auto' />
+                                <div className='my-auto'>Unfollow</div>
+                            </div>
+                            }
+                        </div>
+                        : 
+                        <div className='w-full flex flex-row-reverse'>
+                            <div className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'></div>
                         </div>
                     : ""   //is loading
                 }

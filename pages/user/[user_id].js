@@ -18,7 +18,7 @@ function UserProfilePage() {
     }, { enabled: !!session })
     const { data: profileInfo, refetch: refreshProfileInfo } = useQuery(["profile_info"], async () => { return axios.get("/user/getProfileInfo/" + user_id).then((res) => res.data.data) }, { enabled: !!user_id })
     const { data: posts } = useQuery(["user_posts"], async () => { return axios.get("/posts/user/" + user_id).then((res) => res.data.data) }, { enabled: !!user_id })
-
+    
     useEffect(() => {
         if (userInfo && user_id) {
                 refreshProfileInfo()
