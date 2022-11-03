@@ -1,12 +1,36 @@
 import { BsFillCameraFill, BsFillPersonPlusFill, BsFillPersonDashFill } from 'react-icons/bs'
 import { useRouter } from 'next/router'
 import axios from '../../utils/axiosConfig'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, QueryCache, QueryClient } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 
 function ProfileContent({ profileInfo, userInfo, posts }) {
-    const router = useRouter()
-    const { data: isFollowing } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo })
 
+    async function changeFollowing()
+    {
+        if(isFollowing)
+        {
+            if(isFollowing === true)
+                return await axios.post("/user/removeFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows)
+            return await axios.post("/user//addFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows)
+        }
+        return null
+    }
+    const router = useRouter()
+    const { data: isFollowing, refetch: refetchFollow } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo && profileInfo.id !== userInfo.id })
+    const {mutate} = useMutation(changeFollowing, {
+
+        onMutate: (newFollowValue)=>{
+            new QueryClient().setQueryData(['isFollowing'], newFollowValue)
+        },
+        onError: (error, newData, rollback) => rollback(),
+        onSettled: () => refetchFollow()
+    })
+    const followRef = useRef()
+    useEffect(()=>{
+        if(followRef && isFollowing === true)
+        followRef.current.innerText = "Following"
+    }, [isFollowing, followRef])
     return (
         <>
             {posts ? console.log(posts) : ""}
@@ -35,15 +59,14 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                         :
                         isFollowing ?
                         <div className='w-full flex flex-row-reverse'> {/*follow button*/}
-                            {isFollowing === true ?
-                            <div onClick={() => console.log("add following")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
-                                <BsFillPersonPlusFill className='h-4 w-4 my-auto' />
-                                <div className='my-auto'>Follow</div>
+                            {new QueryClient().getQueryData(['isFollowing']) === true ?
+                            <div onMouseEnter={()=> followRef.current.innerText = "Unfollow"} onMouseLeave={()=> followRef.current.innerText = "Following"} onClick={() => mutate(false)} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2 hover:border-red-600 hover:text-red-600 hover:border'>
+                                <div className='my-auto' ref={followRef}></div>
                             </div>
                             :
-                            <div onClick={() => console.log("remove following")} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
-                                <BsFillPersonDashFill className='h-4 w-4 my-auto' />
-                                <div className='my-auto'>Unfollow</div>
+                            <div onClick={() => mutate(true)} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
+                                <BsFillPersonPlusFill className='h-4 w-4 my-auto' />
+                                <div className='my-auto'>Follow</div>
                             </div>
                             }
                         </div>
