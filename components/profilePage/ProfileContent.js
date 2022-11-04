@@ -1,30 +1,28 @@
 import { BsFillCameraFill, BsFillPersonPlusFill, BsFillPersonDashFill } from 'react-icons/bs'
 import { useRouter } from 'next/router'
 import axios from '../../utils/axiosConfig'
-import { useQuery, useMutation, QueryCache, QueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 
 function ProfileContent({ profileInfo, userInfo, posts }) {
 
+    const queryClient = useQueryClient()
     async function changeFollowing()
     {
-        if(isFollowing)
-        {
+    
             if(isFollowing === true)
                 return await axios.post("/user/removeFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows)
-            return await axios.post("/user//addFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows)
-        }
+            if(isFollowing === false)
+                return await axios.post("/user/addFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows)
         return null
     }
     const router = useRouter()
-    const { data: isFollowing, refetch: refetchFollow } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo && profileInfo.id !== userInfo.id })
+    const { data: isFollowing } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", {follower: userInfo.id, following: profileInfo.id}).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo && profileInfo.id !== userInfo.id })
     const {mutate} = useMutation(changeFollowing, {
-
-        onMutate: (newFollowValue)=>{
-            new QueryClient().setQueryData(['isFollowing'], newFollowValue)
-        },
-        onError: (error, newData, rollback) => rollback(),
-        onSettled: () => refetchFollow()
+        onMutate: (newIsFollowing) => {
+            queryClient.cancelQueries({queryKey: ["isFollowing"]})
+            queryClient.setQueryData(["isFollowing"], newIsFollowing)
+        }//maybe do the onError
     })
     const followRef = useRef()
     useEffect(()=>{
@@ -33,8 +31,8 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
     }, [isFollowing, followRef])
     return (
         <>
-            {posts ? console.log(posts) : ""}
-            {isFollowing ? console.log(isFollowing) : ""}
+            {/* {posts ? console.log(posts) : ""} */}
+            {console.log(isFollowing)}
             <div className='sm:w-[600px] w-full mx-auto mt-8'>
                 <div className='flex sm:w-10/12 w-full mx-auto sm:justify-start justify-around'>
                     <img className='rounded-full sm:h-40 h-32' src={profileInfo?.photo_url} alt={profileInfo?.username + " photo"} referrerPolicy="no-referrer" />
@@ -57,9 +55,9 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                             </div>
                         </div>
                         :
-                        isFollowing ?
+                        queryClient.getQueryData(['isFollowing']) !== undefined ?
                         <div className='w-full flex flex-row-reverse'> {/*follow button*/}
-                            {new QueryClient().getQueryData(['isFollowing']) === true ?
+                            {queryClient.getQueryData(['isFollowing']) === true ?
                             <div onMouseEnter={()=> followRef.current.innerText = "Unfollow"} onMouseLeave={()=> followRef.current.innerText = "Following"} onClick={() => mutate(false)} className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2 hover:border-red-600 hover:text-red-600 hover:border'>
                                 <div className='my-auto' ref={followRef}></div>
                             </div>
@@ -72,7 +70,9 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                         </div>
                         : 
                         <div className='w-full flex flex-row-reverse'>
-                            <div className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'></div>
+                            <div className='bg-slate-200 rounded-full select-none cursor-pointer h-8 w-32 flex gap-2 justify-center shadow hover:shadow-md hover:bg-slate-100 duration-200 ease-in mr-2'>
+                                a
+                            </div>
                         </div>
                     : ""   //is loading
                 }

@@ -1,51 +1,33 @@
 import { useEffect, useState } from 'react'
 import axios from '../utils/axiosConfig'
+import { useQuery, useMutation, QueryCache, QueryClient, useQueryClient } from '@tanstack/react-query'
 
 function Test() {
-
-    const [imageToUpload, setImageToUpload] = useState(null)
-    const [imageToPreview, setImageToPreview] = useState(null)
-
-    function handleChangeImage(event) {
-        setImageToUpload(event.target.files[0])
-
-        const reader = new FileReader()
-        reader.readAsDataURL(event.target.files[0])
-        reader.onloadend = () => {
-            setImageToPreview(reader.result)
+    const queryClient = useQueryClient()
+    const { data: isFollowing} = useQuery(["isFollowing"], 
+        async () => { 
+            return axios.post("/user/getFollowing", {follower: "16660305291902i4rwq217", following: "1666030336737wwgh9cn1"}).then((res) => {console.log(res.data); return res.data.follows}) 
+    })
+    const {mutate} = useMutation(follow, {
+        onMutate: (newIsFollowing) => {
+            queryClient.setQueryData(["isFollowing"], newIsFollowing)
         }
+    })
+    async function follow()
+    {
+        if(isFollowing === false)
+            return await axios.post("/user/addFollowing", {follower: "16660305291902i4rwq217", following: "1666030336737wwgh9cn1"}).then((res) => res.data.follows)
+        else
+            return await axios.post("/user/removeFollowing", {follower: "16660305291902i4rwq217", following: "1666030336737wwgh9cn1"}).then((res) => res.data.follows)
     }
-    async function submitImage() {
-        if (imageToUpload === null) {
-            alert("No image selected")
-            return
-        }
-        if (imageToUpload.size >= 3000000) {
-            alert("Image Size is too big")
-            return
-        }
-        const reader = new FileReader()
-        reader.readAsDataURL(imageToUpload)
-        reader.onloadend = async () => {
-            try {
-                const response = await axios.post("/images/upload", {
-                    image: reader.result
-                })
-                console.log(response)
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }
-
-    }
-return (
-    <div>
-        <input type={"file"} onChange={(event) => handleChangeImage(event)} />
-        <button onClick={async () => await submitImage()}>Submit</button>
-        {imageToPreview && (<img src={imageToPreview} className="h-48" />)}
-    </div>
-)
+    
+    return (
+        <>
+            <div>{queryClient.getQueryData(["isFollowing"]) === true ? "following" : "not following"}</div>
+            <button onClick={()=>mutate(!isFollowing)}>Follow</button>
+   
+        </>
+    )
 }
 
 export default Test
