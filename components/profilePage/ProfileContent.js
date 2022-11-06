@@ -44,7 +44,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
 
     return (
         <>
-        
+            {console.log(profileInfo)}
             <div className='sm:w-[600px] w-full mx-auto mt-8'>
                 <div className='flex sm:w-10/12 w-full mx-auto sm:justify-start justify-around'>
                     <img className='rounded-full sm:h-40 h-32' draggable="false" src={profileInfo?.photo_url} alt={profileInfo?.username + " photo"} referrerPolicy="no-referrer" />
@@ -55,7 +55,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                             <span className='font-semibold'>{profileInfo?.followers}</span><span className='font-light'> followers <span>&nbsp;</span></span>
                             <span className='font-semibold'>{profileInfo?.following}</span><span className='font-light'> following</span>
                         </div>
-                        <div className='mt-4'>Bro/King</div>
+                        <div className='mt-4'>{profileInfo?.description}</div>
                     </div>
                 </div>
                 {userInfo?.id && profileInfo?.id ?
