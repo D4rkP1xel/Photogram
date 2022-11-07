@@ -92,7 +92,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                 <div className='grid grid-cols-3 sm:gap-4 gap-1'>
                     {posts?.map((post, index)=>{
                         return (
-                        <div key={index} className='w-full aspect-square'>
+                        <div key={index} onClick={()=>router.push("/post/" + post.id)} className='w-full aspect-square cursor-pointer'>
                             <div className={'w-full h-full bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${post.photo_url}')` }}></div>
                         </div>)
                     })}
