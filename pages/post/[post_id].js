@@ -18,51 +18,48 @@ function PostPage() {
     function toDate(date) {
         const currentDate = Date.parse(new Date())
         const dateNorm = Date.parse(new Date(date))
-        const minutes = (currentDate - dateNorm)/(1000*60)
+        const minutes = (currentDate - dateNorm) / (1000 * 60)
         if (minutes < 1) {
             return "a few moments ago"
         }
-        if(minutes < 60)
-        {
-            if(minutes<2)
+        if (minutes < 60) {
+            if (minutes < 2)
                 return "a min ago"
             return `${parseInt(minutes)} min ago`
         }
-        const hours = minutes/60
-        if(hours < 24)
-        {
-            if(hours < 2)
+        const hours = minutes / 60
+        if (hours < 24) {
+            if (hours < 2)
                 return "an hour ago"
             return `${parseInt(hours)} hours ago`
         }
-        const days = hours/24
-        if(days < 31)
-        {
-            if(days < 2)
+        const days = hours / 24
+        if (days < 31) {
+            if (days < 2)
                 return "a day ago"
             return `${parseInt(days)} days ago`
         }
-        const months = days/31
-        if(months < 12)
-        {
-            if(months < 2)
+        const months = days / 31
+        if (months < 12) {
+            if (months < 2)
                 return "a month ago"
             return `${parseInt(months)} months ago`
         }
-        const years = days/365
-        if(years < 2)
+        const years = days / 365
+        if (years < 2)
             return "a year ago"
         return `${parseInt(years)} years ago`
-        
+
     }
     return (
         <>
+            {console.log(postInfo)}
             <Header userInfo={userInfo} />
             <div className='lg:w-[1000px] w-full mx-auto mt-8 lg:flex lg:gap-2'>
 
                 <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
                     {postInfo !== undefined ?
-                        <div className={'w-full h-full bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
+                        <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
                         :
                         <div className={'w-full h-full bg-slate-300'}></div>
                     }
@@ -75,7 +72,6 @@ function PostPage() {
                                 <>
                                     <img className="h-12 rounded-full cursor-pointer" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
                                     <div className='font-medium select-none cursor-pointer'>{postInfo.author_username}</div>
-                                    {console.log(toDate(postInfo.date))}
                                 </>
                                 :
                                 <>
@@ -83,21 +79,31 @@ function PostPage() {
                                     <div className='h-4 w-20 rounded-full bg-slate-300'></div>
                                 </>
                             }
-
                         </div>
                         {postInfo !== undefined ?
                             <div className='select-none text-gray-400 absolute text-[10px] tracking-wide'>
                                 <div className='relative bottom-6 left-16'>Posted {toDate(postInfo.date)}</div>
                             </div>
-                            :
-                            ""
-                        }
-
-
+                            : ""}
                     </div>
 
                     <hr className='md:max-w-[600px] sm:mx-auto w-full ' />
 
+                    {postInfo !== undefined ?
+                        postInfo.description !== null ?
+                            <div className='mb-4 md:max-w-[600px] sm:mx-auto w-full '>
+                                <div className='flex gap-4 items-center pt-4 pb-2'>
+                                    <img className="h-12 rounded-full cursor-pointer" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
+                                    <div className='font-medium select-none cursor-pointer'>{postInfo.author_username}</div>
+                                </div>
+                                <div className='select-none text-gray-400 absolute text-[10px] tracking-wide'>
+                                    <div className='relative bottom-5 left-16'><span>{toDate(postInfo.date)}</span></div>
+                                </div>
+                                <div className='lg:pl-4 lg:pr-0 sm:px-16 px-4'>{postInfo.description}</div>
+                            </div>
+                            : ""
+                            : ""
+                    }
                     <div className='mb-4 md:max-w-[600px] sm:mx-auto w-full '>
                         <div className='flex gap-4 items-center py-4'>
                             <img className="h-12 rounded-full cursor-pointer" draggable="false" src="https://lh3.googleusercontent.com/a/ALm5wu2UnfIKK-U9TsT1mHP4gT4I7cvnbko3CDXfKHOIGQ=s96-c" alt=" image" referrerPolicy="no-referrer" />
