@@ -14,7 +14,7 @@ function PostPage() {
         }).then((res) => res.data.data)
     }, { enabled: !!session })
     const { data: postInfo } = useQuery(["post_info"], async () => { return axios.post("/posts/getPost", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
-
+    const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
     function toDate(date) {
         const currentDate = Date.parse(new Date())
         const dateNorm = Date.parse(new Date(date))
@@ -53,7 +53,7 @@ function PostPage() {
     }
     return (
         <>
-            {console.log(postInfo)}
+            {console.log(comments)}
             <Header userInfo={userInfo} />
             <div className='lg:w-[1000px] w-full mx-auto mt-8 lg:flex lg:gap-2'>
 
@@ -102,9 +102,28 @@ function PostPage() {
                                 <div className='lg:pl-4 lg:pr-0 sm:px-16 px-4'>{postInfo.description}</div>
                             </div>
                             : ""
-                            : ""
+                        : ""
                     }
-                    <div className='mb-4 md:max-w-[600px] sm:mx-auto w-full '>
+                    
+                    {comments !== undefined ?
+                        comments?.map((comment, index) => {
+                            return (
+                            <div key={index} className='mb-4 md:max-w-[600px] sm:mx-auto w-full '>
+                                <div className='flex gap-4 items-center py-4'>
+                                    <img className="h-12 rounded-full cursor-pointer" draggable="false" src={comment.user_photo_url} alt="image" referrerPolicy="no-referrer" />
+                                    <div className='font-medium select-none cursor-pointer'>{comment.user_username}</div>
+                                </div>
+                                <div className='select-none text-gray-400 absolute text-[10px] tracking-wide'>
+                                    <div className='relative bottom-6 left-16'><div className='flex gap-2'><span>{toDate(comment.date)}</span><span className='font-semibold text-gray-500 cursor-pointer'>reply</span></div></div>
+                                </div>
+                                <div className='lg:pl-4 lg:pr-0 sm:px-16 px-4'>{comment.text}</div>
+                            </div>
+                            )
+                        })
+                        :
+                        ""
+                    }
+                    {/* <div className='mb-4 md:max-w-[600px] sm:mx-auto w-full '>
                         <div className='flex gap-4 items-center py-4'>
                             <img className="h-12 rounded-full cursor-pointer" draggable="false" src="https://lh3.googleusercontent.com/a/ALm5wu2UnfIKK-U9TsT1mHP4gT4I7cvnbko3CDXfKHOIGQ=s96-c" alt=" image" referrerPolicy="no-referrer" />
                             <div className='font-medium select-none cursor-pointer'>Alexandre Silva</div>
@@ -126,7 +145,7 @@ function PostPage() {
                             <div className='relative bottom-6 left-16'><div className='flex gap-2'><span>1min ago</span><span className='font-semibold text-gray-500 cursor-pointer'>reply</span></div></div>
                         </div>
                         <div className='lg:pl-4 lg:pr-0 sm:px-16 px-4'>Great photo!!!! I really liked the background.</div>
-                    </div>
+                    </div> */}
 
 
                     <div className='h-12'></div>
