@@ -1,12 +1,13 @@
 import { useRouter } from 'next/router'
 import axios from '../../utils/axiosConfig'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
 import { useEffect, useRef, useState } from 'react'
 
 function PostPage() {
     const { data: session } = useSession()
+    const queryClient = useQueryClient()
     const router = useRouter()
     const { post_id } = router.query
     const { data: userInfo } = useQuery(["user_info"], async () => {
@@ -18,13 +19,12 @@ function PostPage() {
     const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id, refetchOnWindowFocus: "false", refetchOnMount: "false" })
     const commentTextAreaRef = useRef()
     const [commentText, addCommentText] = useState("")
-  
-    
-    function addCommentOnChange(e)
-    {
-        
+
+
+    function addCommentOnChange(e) {
+
         addCommentText(e.target.value)
-        e.target.style.height= "24px"
+        e.target.style.height = "24px"
         e.target.style.height = `${e.target.scrollHeight}px`
     }
     function toDate(date) {
@@ -64,20 +64,52 @@ function PostPage() {
 
     }
 
-    function commentLenght()
-    {
+    function commentLenght() {
         const maxLength = 400
-        if(commentText.length === 0)
-        {
+        if (commentText.length === 0) {
             return ""
         }
-        if(commentText.length > maxLength)
-        {
+        if (commentText.length > maxLength) {
             return (<span className='text-red-500'>{commentText.length}/{maxLength}</span>)
         }
-            return (<span>{commentText.length}/{maxLength}</span>)
-        
+        return (<span>{commentText.length}/{maxLength}</span>)
+
     }
+
+    async function postComment()
+    {
+        if(commentText.length > 400 || commentText.length === 0)
+        {
+            alert("Comment length not permitted")
+            return
+        }
+        try{
+            mutate({date: new Date(), user_id: userInfo?.id, text: commentText, user_photo_url: userInfo?.photo_url, user_username: userInfo?.username})
+            
+        }
+        catch(err)
+        {
+            console.log(err)
+            alert("Error")
+        }
+    }
+    async function addCommentMutation()
+    {
+        if(postInfo != null && userInfo != null)
+            return await axios.post("/posts/addComment", {parentId: postInfo?.id, isFromPost: true, comment: commentText, user_id: userInfo?.id})
+    }
+
+        const {mutate} = useMutation(addCommentMutation, {
+            onMutate: (newComment) => {
+               
+                queryClient.cancelQueries({queryKey: ["comments"]})
+                queryClient.setQueryData(["comments"], (prev)=>{return [newComment, ...prev]})
+                addCommentText("")
+            }//maybe do the onError
+            
+        })
+    
+    
 
     return (
         <>
@@ -142,16 +174,16 @@ function PostPage() {
                             </div>
                             <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
                             <div className='font-semibold text-gray-500  mt-2 mb-auto select-none'>
-                                {commentText.length <= 400 ? 
-                                <div className='cursor-pointer'>Post</div>
-                                :
-                                <div className='text-slate-300'>Post</div>
+                                {commentText.length <= 400 ?
+                                    <div onClick={()=>postComment()} className='cursor-pointer'>Post</div>
+                                    :
+                                    <div className='text-slate-300'>Post</div>
                                 }
-                                
-                                <div className='text-[12px] font-thin'>{commentLenght()}</div>  
-                                
-                                </div>
-                            
+
+                                <div className='absolute text-[12px] font-thin'>{commentLenght()}</div>
+
+                            </div>
+
                         </div>
                         :
                         ""
