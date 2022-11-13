@@ -118,17 +118,24 @@ function PostPage() {
 
             queryClient.cancelQueries({ queryKey: ["is_like"] })
             queryClient.setQueryData(["is_like"], newLike)
-            // let currentProfileData = profileInfo
-            // if(newIsFollowing===true)
-            //     currentProfileData.followers++
-            // if(newIsFollowing===false)
-            //     currentProfileData.followers--
+            let currentPostInfo = postInfo
+            if(newLike===true)
+                currentPostInfo.num_likes++
+            if(newLike===false)
+                currentPostInfo.num_likes--
         }//maybe do the onError
     })
 
+    function numLikes(likes)
+    {
+        if(likes === 1)
+        {
+            return "1 like"
+        }
+        return likes + " likes"
+    }
     return (
         <>
-            {console.log(isLike)}
             <Header userInfo={userInfo} />
             <div className='lg:w-[1000px] w-full mx-auto mt-8 lg:flex lg:gap-2'>
 
@@ -136,7 +143,7 @@ function PostPage() {
                     {postInfo !== undefined ?
                         <>
                             <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
-                            <div className='flex px-4 pt-4'>
+                            <div className='flex px-4 pt-3'>
                                 {
                                 isLike !== undefined ?
                                 isLike === true ?
@@ -148,16 +155,18 @@ function PostPage() {
                                         <IoMdHeartEmpty className='h-full w-auto' />
                                     </div>
                                     :
-                                    <div className='h-10 w-10 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                                    <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
                                 }
                             </div>
+                            <div className='px-6 font-semibold select-none mb-1'>{numLikes(postInfo.num_likes)}</div>
                         </>
                         :
                         <>
                             <div className={'w-full h-full bg-slate-300'}></div>
-                            <div className='flex px-4 pt-4'>
-                                <div className='h-10 w-10 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                            <div className='flex px-4 pt-3'>
+                                <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
                             </div>
+                            <div className='ml-6 h-4 w-14 bg-slate-300 rounded-full'></div>
                         </>
 
                     }
@@ -169,9 +178,9 @@ function PostPage() {
                             {postInfo !== undefined ?
                                 <>
                                     <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                        <img className="h-10 rounded-full cursor-pointer" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
+                                        <img onClick={()=>router.push("/user/" + postInfo.author_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
                                         <div>
-                                            <div className='font-medium text-sm select-none cursor-pointer'>{postInfo.author_username}</div>
+                                            <div onClick={()=>router.push("/user/" + postInfo.author_id)} className='font-medium text-sm select-none cursor-pointer'>{postInfo.author_username}</div>
                                         </div>
                                     </div>
                                     <div>
@@ -179,7 +188,6 @@ function PostPage() {
                                         <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
                                             <div className='flex gap-2'>
                                                 <span>{toDate(postInfo.date)}</span>
-                                                <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
                                             </div>
                                         </div>
                                     </div>
@@ -206,9 +214,9 @@ function PostPage() {
                     {postInfo !== undefined ?
                         <div className='flex gap-4 py-2'>
                             <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                <img className="h-10 rounded-full cursor-pointer" draggable="false" src={userInfo?.photo_url} alt="" referrerPolicy="no-referrer" />
+                                <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={userInfo?.photo_url} alt="" referrerPolicy="no-referrer" />
                                 <div>
-                                    <div className='font-medium text-sm select-none cursor-pointer'>{userInfo?.username}</div>
+                                    <div className='font-medium text-sm cursor-pointer'>{userInfo?.username}</div>
                                 </div>
                             </div>
                             <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
@@ -234,9 +242,9 @@ function PostPage() {
                                 <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
                                     <div className='flex gap-4 py-2'>
                                         <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                            <img className="h-10 rounded-full cursor-pointer" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
-                                            <div className=''>
-                                                <div className='font-medium text-sm select-none cursor-pointer'>{comment.user_username}</div>
+                                            <img onClick={()=>router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                            <div>
+                                                <div onClick={()=>router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer'>{comment.user_username}</div>
                                             </div>
                                         </div>
                                         <div>
