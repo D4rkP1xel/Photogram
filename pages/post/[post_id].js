@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
 import { useEffect, useRef, useState } from 'react'
+import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 
 function PostPage() {
     const { data: session } = useSession()
@@ -16,7 +17,8 @@ function PostPage() {
         }).then((res) => res.data.data)
     }, { enabled: !!session })
     const { data: postInfo } = useQuery(["post_info"], async () => { return axios.post("/posts/getPost", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
-    const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id, refetchOnWindowFocus: "false", refetchOnMount: "false" })
+    const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
+    const { data: isLike } = useQuery(["is_like"], async () => { return axios.post("/posts/getLike", { post_id: post_id, user_id: userInfo.id }).then((res) => res.data.is_like) }, { enabled: !!postInfo && !!userInfo })
     const commentTextAreaRef = useRef()
     const [commentText, addCommentText] = useState("")
 
@@ -76,51 +78,88 @@ function PostPage() {
 
     }
 
-    async function postComment()
-    {
-        if(commentText.length > 400 || commentText.length === 0)
-        {
+    function postComment() {
+        if (commentText.length > 400 || commentText.length === 0) {
             alert("Comment length not permitted")
             return
         }
-        try{
-            mutate({date: new Date(), user_id: userInfo?.id, text: commentText, user_photo_url: userInfo?.photo_url, user_username: userInfo?.username})
-            
-        }
-        catch(err)
-        {
-            console.log(err)
-            alert("Error")
-        }
+        mutate({ date: new Date(), user_id: userInfo?.id, text: commentText, user_photo_url: userInfo?.photo_url, user_username: userInfo?.username })
+
     }
-    async function addCommentMutation()
-    {
-        if(postInfo != null && userInfo != null)
-            return await axios.post("/posts/addComment", {parentId: postInfo?.id, isFromPost: true, comment: commentText, user_id: userInfo?.id})
+    async function addCommentMutation() {
+        if (postInfo != null && userInfo != null)
+            return await axios.post("/posts/addComment", { parentId: postInfo?.id, isFromPost: true, comment: commentText, user_id: userInfo?.id })
     }
 
-        const {mutate} = useMutation(addCommentMutation, {
-            onMutate: (newComment) => {
-               
-                queryClient.cancelQueries({queryKey: ["comments"]})
-                queryClient.setQueryData(["comments"], (prev)=>{return [newComment, ...prev]})
-                addCommentText("")
-            }//maybe do the onError
-            
-        })
-    
-    
+    const { mutate } = useMutation(addCommentMutation, {
+        onMutate: (newComment) => {
+
+            queryClient.cancelQueries({ queryKey: ["comments"] })
+            queryClient.setQueryData(["comments"], (prev) => { return [newComment, ...prev] })
+            addCommentText("")
+        }//maybe do the onError
+
+    })
+
+    async function changeLike() {
+        if (isLike === true) {
+            await axios.post("/posts/removeLike", { post_id: post_id, user_id: userInfo.id })
+            return false
+        }
+
+        if (isLike === false) {
+            await axios.post("/posts/addLike", { post_id: post_id, user_id: userInfo.id })
+            return true
+        }
+        return null
+    }
+    const { mutate: mutateLike } = useMutation(changeLike, {
+        onMutate: (newLike) => {
+
+            queryClient.cancelQueries({ queryKey: ["is_like"] })
+            queryClient.setQueryData(["is_like"], newLike)
+            // let currentProfileData = profileInfo
+            // if(newIsFollowing===true)
+            //     currentProfileData.followers++
+            // if(newIsFollowing===false)
+            //     currentProfileData.followers--
+        }//maybe do the onError
+    })
 
     return (
         <>
+            {console.log(isLike)}
             <Header userInfo={userInfo} />
             <div className='lg:w-[1000px] w-full mx-auto mt-8 lg:flex lg:gap-2'>
 
                 <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
                     {postInfo !== undefined ?
-                        <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
+                        <>
+                            <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
+                            <div className='flex px-4 pt-4'>
+                                {
+                                isLike !== undefined ?
+                                isLike === true ?
+                                    <div onClick={()=>mutateLike(false)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                        <IoMdHeart className='h-full w-auto' />
+                                    </div>
+                                    :
+                                    <div onClick={()=>mutateLike(true)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                        <IoMdHeartEmpty className='h-full w-auto' />
+                                    </div>
+                                    :
+                                    <div className='h-10 w-10 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                                }
+                            </div>
+                        </>
                         :
-                        <div className={'w-full h-full bg-slate-300'}></div>
+                        <>
+                            <div className={'w-full h-full bg-slate-300'}></div>
+                            <div className='flex px-4 pt-4'>
+                                <div className='h-10 w-10 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                            </div>
+                        </>
+
                     }
                 </div>
 
@@ -175,7 +214,7 @@ function PostPage() {
                             <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
                             <div className='font-semibold text-gray-500  mt-2 mb-auto select-none'>
                                 {commentText.length <= 400 ?
-                                    <div onClick={()=>postComment()} className='cursor-pointer'>Post</div>
+                                    <div onClick={() => postComment()} className='cursor-pointer'>Post</div>
                                     :
                                     <div className='text-slate-300'>Post</div>
                                 }
