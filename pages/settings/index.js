@@ -11,10 +11,25 @@ function index() {
             email: session.user.email
         }).then((res) => res.data.data)
     }, { enabled: !!session })
+
+    const [optionPage, setOptionPage] = "profile"       //accepted values: profile,
+
+    function handleOption()
+    {
+        if(optionPage === "profile")
+        {
+            return(
+                <div>
+                    profile settings
+                </div>
+            )
+        }
+        return ""
+    }
     return (
         <>
             <Header userInfo={userInfo} />
-            <div>setingsng</div>
+            {handleOption}
         </>
     )
 }
