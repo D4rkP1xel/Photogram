@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Header from '../../components/header'
 import { useSession } from 'next-auth/react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from '../../utils/axiosConfig'
 
 
@@ -24,12 +24,21 @@ function SettingsPage() {
             user_id: userInfo.id
         }).then((res) => res.data.description)
     }, { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
-
+    const queryClient = useQueryClient()
     useEffect(() => {
         if (description !== undefined)
             addDescription(description)
     }, [description])
     
+    const { mutate } = useMutation(async()=>await axios.post("/user/editDescription", {user_id: userInfo.id, description: descriptionText}), {
+        onMutate: (newDescription) => {
+
+            queryClient.cancelQueries({ queryKey: ["user_description"] })
+            queryClient.setQueryData(["user_description"], () => { return newDescription })
+            
+        }//maybe do the onError
+
+    })
     const maxLength = 240
     
     function addCommentOnChange(e) {
@@ -48,7 +57,8 @@ function SettingsPage() {
         {
             if(description !== descriptionText)
             {
-                await axios.post("/user/editDescription", {user_id: userInfo.id, description: descriptionText})
+                // await axios.post("/user/editDescription", {user_id: userInfo.id, description: descriptionText})
+                mutate(descriptionText)
                 //supposedly there should be a mutate modifying the query 
             }
                 
