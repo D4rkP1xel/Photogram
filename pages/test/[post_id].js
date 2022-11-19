@@ -5,11 +5,11 @@ import { useQuery, useMutation, QueryCache, QueryClient, useQueryClient } from '
 function Test() {
     const queryClient = useQueryClient()
     
-    const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: "1667940497985lf3ip9ln" }).then((res) => res.data.data) }, {enabled: true})
+   
     return (
         <div>
-            {console.log(comments)}
             comments
+            yooo
         </div>
     )
 }

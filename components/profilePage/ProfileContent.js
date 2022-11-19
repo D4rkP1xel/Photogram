@@ -42,6 +42,11 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
         followRef.current.innerText = "Following"
     }, [isFollowing, followRef])
 
+    function convertFromSqlString(str)
+   {
+        return str.replace(/<br\/>/g, '\n')
+   }
+
     return (
         <>
        
@@ -55,7 +60,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                             <span className='font-semibold'>{profileInfo?.followers}</span><span className='font-light'> followers <span>&nbsp;</span></span>
                             <span className='font-semibold'>{profileInfo?.following}</span><span className='font-light'> following</span>
                         </div>
-                        <div className='mt-4'>{profileInfo?.description}</div>
+                        <div className='mt-4 whitespace-pre'>{profileInfo !== undefined ? convertFromSqlString(profileInfo.description) : ""}</div>
                     </div>
                 </div>
                 {userInfo?.id && profileInfo?.id ?
