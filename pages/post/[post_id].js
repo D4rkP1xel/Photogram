@@ -184,7 +184,7 @@ function PostPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className='w-fit break-words mt-2'>{postInfo.description}</div>
+                                        <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{postInfo.description}</div>
                                         <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
                                             <div className='flex gap-2'>
                                                 <span>{toDate(postInfo.date)}</span>
@@ -248,7 +248,7 @@ function PostPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            <div className='w-fit break-words mt-2'>{comment.text}</div>
+                                            <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{comment.text}</div>
                                             <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
                                                 <div className='flex gap-2'>
                                                     <span>{toDate(comment.date)}</span>

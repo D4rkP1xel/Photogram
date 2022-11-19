@@ -1,20 +1,24 @@
-import { useEffect, useState } from 'react'
 import axios from '../../utils/axiosConfig'
-import { useQuery, useMutation, QueryCache, QueryClient, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import Header from '../../components/header'
 
 function Test() {
     const queryClient = useQueryClient()
+    const { data: session } = useSession()
+
+    const { data: userInfo } = useQuery(["user_info"], async () => {
+        return axios.post("/user/getUserInfo", {
+            email: session.user.email
+        }).then((res) => res.data.data)
+    }, { enabled: !!session })
+
     
-   function convertToSqlString(str)
-   {
-        return str.replace('\n','<br/>')
-   }
     return (
-        <div>
-            comments
-            yooo
-            {console.log(convertToSqlString())}
-        </div>
+        <>
+            <Header userInfo={userInfo} />
+
+        </>
     )
 }
 

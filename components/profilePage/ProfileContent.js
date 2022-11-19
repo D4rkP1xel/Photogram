@@ -1,8 +1,9 @@
-import { BsFillCameraFill, BsFillPersonPlusFill, BsFillPersonDashFill } from 'react-icons/bs'
+import { BsFillCameraFill, BsFillPersonPlusFill } from 'react-icons/bs'
 import { useRouter } from 'next/router'
 import axios from '../../utils/axiosConfig'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+
 
 function ProfileContent({ profileInfo, userInfo, posts }) {
 
@@ -42,10 +43,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
         followRef.current.innerText = "Following"
     }, [isFollowing, followRef])
 
-    function convertFromSqlString(str)
-   {
-        return str.replace(/<br\/>/g, '\n')
-   }
+    
 
     return (
         <>
@@ -60,7 +58,7 @@ function ProfileContent({ profileInfo, userInfo, posts }) {
                             <span className='font-semibold'>{profileInfo?.followers}</span><span className='font-light'> followers <span>&nbsp;</span></span>
                             <span className='font-semibold'>{profileInfo?.following}</span><span className='font-light'> following</span>
                         </div>
-                        <div className='mt-4 whitespace-pre'>{profileInfo !== undefined ? convertFromSqlString(profileInfo.description) : ""}</div>
+                        <div className='mt-4 whitespace-pre-wrap'>{profileInfo !== undefined ? profileInfo.description : ""}</div>
                     </div>
                 </div>
                 {userInfo?.id && profileInfo?.id ?

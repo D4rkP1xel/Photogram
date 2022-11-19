@@ -29,11 +29,11 @@ function SettingsPage() {
 
     useEffect(() => {
         if (description !== undefined && descriptionTextAreaRef !== null) {
-            addDescription(convertFromSqlString(description))
+            addDescription(description)
         }
     }, [description])
 
-    const { mutate } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: convertToSqlString(descriptionText) }), {
+    const { mutate } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: descriptionText }), {
         onMutate: (newDescription) => {
 
             queryClient.cancelQueries({ queryKey: ["user_description"] })
@@ -43,13 +43,7 @@ function SettingsPage() {
     })
     const maxLength = 240
 
-    function convertToSqlString(str) {
-        return str.replace(/\n/g, '<br/>')
-    }
-
-    function convertFromSqlString(str) {
-        return str.replace(/<br\/>/g, '\n')
-    }
+    
 
     function addCommentOnChange(e) {
 
@@ -99,7 +93,7 @@ function SettingsPage() {
                         <span className='shrink-0'>Change Profile Description</span>
                         {description !== undefined ?
                             <>
-                                <textarea ref={descriptionTextAreaRef} onFocus={(e)=>changeTextAreaSize(e)} onChange={addCommentOnChange} value={descriptionText} className='overflow-hidden border border-slate-400 w-full h-[28px] pb-1'></textarea>
+                                <textarea ref={descriptionTextAreaRef} onFocus={(e)=>changeTextAreaSize(e)} onChange={addCommentOnChange} value={descriptionText} className='overflow-hidden whitespace-pre-wrap border border-slate-400 w-full h-[28px] pb-1'></textarea>
                                 <div className='mt-1 w-20 text-[12px] font-thin text-center'>{descriptionLenght()}</div>
                             </>
 
