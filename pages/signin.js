@@ -2,6 +2,7 @@ import {useSession, signIn } from 'next-auth/react'
 import {useRouter} from 'next/router'
 
 import Loading from '../components/loading'
+import axios from '../utils/axiosConfig'
 
 function SignIn() {
     const router = useRouter()
@@ -14,7 +15,9 @@ function SignIn() {
     }
     if(session)
     {
-        router.push(router.query?.callbackUrl || "/")
+        
+        router.push("/verify?provider=google")
+        // router.push(router.query?.callbackUrl || "/")
         return 
     }
     return (

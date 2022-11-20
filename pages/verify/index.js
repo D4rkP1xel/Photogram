@@ -2,7 +2,8 @@ import {useSession, signIn, signOut } from 'next-auth/react'
 import {useRouter} from 'next/router'
 import { useEffect } from 'react'
 import Loading from '../../components/loading'
-import axios from 'axios'
+import axios from '../../utils/axiosConfig'
+
 
 function Index() {                  // example: /verify?provider=google -> check in db if provider exists
     const router = useRouter()
@@ -13,9 +14,10 @@ function Index() {                  // example: /verify?provider=google -> check
             router.push("/signin")
         }
     useEffect(() => {
+        //TODO CHANGE USEEFFECT TO REACT QUERY BECAUSE POST IS SENT 2 TIMES
         async function updateUser()
         {
-            const response = await axios.post("https://photogram-backend-production.up.railway.app/user/updateUser", {
+            const response = await axios.post("/user/updateUser", {
                 user_data: session.user,
                 provider: router.query.provider
             })
