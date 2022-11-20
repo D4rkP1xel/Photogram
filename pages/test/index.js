@@ -1,5 +1,5 @@
 import axios from '../../utils/axiosConfig'
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
 import { useState } from 'react'
@@ -14,7 +14,7 @@ function Test() {
             email: session.user.email
         }).then((res) => res.data.data)
     }, { enabled: !!session })
-    const [last_post_id, setLast_post_id ] = useState(null)
+    const [last_post_id, setLast_post_id] = useState(null)
     async function getInfinitePosts(last_post_id_param)
     {
         
