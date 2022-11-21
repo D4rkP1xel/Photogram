@@ -178,7 +178,7 @@ function PostPage() {
                         ""
                     }
                     {postInfo !== undefined ?
-                        <div className='flex gap-4 py-2'>
+                        <div className='flex gap-3 py-2'>
                             <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
                                 <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={userInfo?.photo_url} alt="" referrerPolicy="no-referrer" />
                                 <div>
@@ -206,7 +206,7 @@ function PostPage() {
                         comments?.map((comment, index) => {
                             return (
                                 <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
-                                    <div className='flex gap-4 py-2'>
+                                    <div className='flex gap-3 py-2'>
                                         <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
                                             <img onClick={()=>router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
                                             <div>
