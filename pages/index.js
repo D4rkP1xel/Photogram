@@ -1,8 +1,9 @@
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 import { useState } from 'react'
 import Header from '../components/header'
 import HeaderNotLogged from '../components/headerNotLogged'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import axios from '../utils/axiosConfig'
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 import { BsChat } from 'react-icons/bs'
@@ -10,7 +11,8 @@ import toDate from '../utils/toDate'
 
 function Home() {
     const queryClient = useQueryClient()
-    const { data: session, status } = useSession()
+    const router = useRouter()
+    const { data: session } = useSession()
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
             email: session.user.email
@@ -43,6 +45,40 @@ function Home() {
 
     const { data: posts, refetch } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
+
+        async function changeLike({setLike, postIndex: index}) {
+         
+            const postInfo = queryClient.getQueryData(["timeline_posts"])[index]
+            if (setLike === false) {
+                await axios.post("/posts/removeLike", { post_id: postInfo.id, user_id: userInfo.id })
+                return false
+            }
+    
+            if (setLike === true) {
+                await axios.post("/posts/addLike", { post_id: postInfo.id, user_id: userInfo.id })
+                return true
+            }
+            return null
+        }
+
+    const { mutate } = useMutation((vars)=>changeLike(vars), {
+        onMutate: ({ setLike, postIndex: index }) => {
+
+            // queryClient.cancelQueries({ queryKey: ["timeline_posts"] }) => this was breaking the mutation function easily
+            let currentPostInfo = queryClient.getQueryData(["timeline_posts"])[index]
+            console.log(currentPostInfo)
+            if(setLike===true)
+            {
+                currentPostInfo.num_likes++
+                currentPostInfo.is_liked = 1
+            }
+            if(setLike===false)
+            {
+                currentPostInfo.num_likes--
+                currentPostInfo.is_liked = 0
+            }
+        }//maybe do the onError
+    })
     return (
         <>
             {
@@ -54,18 +90,18 @@ function Home() {
                                 posts.map((postInfo, index) => {
                                     return (
                                         <div key={postInfo.id} className='w-full my-10'>
-                                            <div className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
+                                            <div onClick={()=>router.push("/user/" + postInfo.user_id)} className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
                                                 <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.user_photo_url} alt="" referrerPolicy="no-referrer" />
                                                 <div className='mx-4 font-semibold cursor-pointer select-none'>{postInfo.username}</div>
                                             </div>
                                             <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
                                             <div className='h-14 bg-slate-200 pt-4 flex px-2'>
                                                 {postInfo.is_liked === 1 ?
-                                                    <div className='h-10 w-12 px-2 pb-2 cursor-pointer' onClick={() => mutate({setLike: false, postIndex: index})} >
+                                                    <div className='h-10 w-12 px-2 pb-2 cursor-pointer' onClick={() => mutate({ setLike: false, postIndex: index })} >
                                                         <IoMdHeart className='h-full w-auto' />
                                                     </div>
                                                     :
-                                                    <div className='h-10 w-12 px-2 pb-2 cursor-pointer' onClick={() => mutate({setLike: true, postIndex: index})} >
+                                                    <div className='h-10 w-12 px-2 pb-2 cursor-pointer' onClick={() => mutate({ setLike: true, postIndex: index })} >
                                                         <IoMdHeartEmpty className='h-full w-auto' />
                                                     </div>
                                                 }
