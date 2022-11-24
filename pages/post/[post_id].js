@@ -3,7 +3,7 @@ import axios from '../../utils/axiosConfig'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 import toDate from '../../utils/toDate'
 
@@ -30,7 +30,7 @@ function PostPage() {
         e.target.style.height = "24px"
         e.target.style.height = `${e.target.scrollHeight}px`
     }
-    
+
 
     function commentLenght() {
         const maxLength = 400
@@ -85,17 +85,15 @@ function PostPage() {
             queryClient.cancelQueries({ queryKey: ["is_like"] })
             queryClient.setQueryData(["is_like"], newLike)
             let currentPostInfo = postInfo
-            if(newLike===true)
+            if (newLike === true)
                 currentPostInfo.num_likes++
-            if(newLike===false)
+            if (newLike === false)
                 currentPostInfo.num_likes--
         }//maybe do the onError
     })
 
-    function numLikes(likes)
-    {
-        if(likes === 1)
-        {
+    function numLikes(likes) {
+        if (likes === 1) {
             return "1 like"
         }
         return likes + " likes"
@@ -103,7 +101,7 @@ function PostPage() {
     return (
         <>
             <Header userInfo={userInfo} />
-            <div className='lg:w-[1000px] w-full mx-auto mt-8 lg:flex lg:gap-2'>
+            <div className='lg:w-[1000px] w-full lg:max-h-[580px] mx-auto mt-8 lg:flex lg:gap-2'>
 
                 <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
                     {postInfo !== undefined ?
@@ -111,17 +109,17 @@ function PostPage() {
                             <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${postInfo.photo_url}')` }}></div>
                             <div className='flex px-4 pt-3'>
                                 {
-                                isLike !== undefined ?
-                                isLike === true ?
-                                    <div onClick={()=>mutateLike(false)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
-                                        <IoMdHeart className='h-full w-auto' />
-                                    </div>
-                                    :
-                                    <div onClick={()=>mutateLike(true)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
-                                        <IoMdHeartEmpty className='h-full w-auto' />
-                                    </div>
-                                    :
-                                    <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                                    isLike !== undefined ?
+                                        isLike === true ?
+                                            <div onClick={() => mutateLike(false)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                                <IoMdHeart className='h-full w-auto' />
+                                            </div>
+                                            :
+                                            <div onClick={() => mutateLike(true)} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                                <IoMdHeartEmpty className='h-full w-auto' />
+                                            </div>
+                                        :
+                                        <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
                                 }
                             </div>
                             <div className='px-6 font-semibold select-none mb-1'>{numLikes(postInfo.num_likes)}</div>
@@ -138,15 +136,15 @@ function PostPage() {
                     }
                 </div>
 
-                <div className='w-full md:max-w-[600px] px-6 mx-auto'>
+                <div className='w-full md:max-w-[600px] px-6 mx-auto max-h-full'>
                     <div className='md:max-w-[600px] sm:mx-auto w-full'>
                         <div className='flex gap-4 pt-4'>
                             {postInfo !== undefined ?
                                 <>
                                     <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                        <img onClick={()=>router.push("/user/" + postInfo.author_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
+                                        <img onClick={() => router.push("/user/" + postInfo.author_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
                                         <div>
-                                            <div onClick={()=>router.push("/user/" + postInfo.author_id)} className='font-medium text-sm select-none cursor-pointer'>{postInfo.author_username}</div>
+                                            <div onClick={() => router.push("/user/" + postInfo.author_id)} className='font-medium text-sm select-none cursor-pointer'>{postInfo.author_username}</div>
                                         </div>
                                     </div>
                                     <div>
@@ -203,29 +201,31 @@ function PostPage() {
 
                     }
                     {comments !== undefined ?
-                        comments?.map((comment, index) => {
-                            return (
-                                <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
-                                    <div className='flex gap-3 py-2'>
-                                        <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                            <img onClick={()=>router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
-                                            <div>
-                                                <div onClick={()=>router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer'>{comment.user_username}</div>
+                            <div className='max-h-96 overflow-auto'>
+                            {comments?.map((comment, index) => {
+                                return (
+                                    <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
+                                        <div className='flex gap-3 py-2'>
+                                            <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
+                                                <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                <div>
+                                                    <div onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer'>{comment.user_username}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{comment.text}</div>
-                                            <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
-                                                <div className='flex gap-2'>
-                                                    <span>{toDate(comment.date)}</span>
-                                                    <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                            <div>
+                                                <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{comment.text}</div>
+                                                <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                    <div className='flex gap-2'>
+                                                        <span>{toDate(comment.date)}</span>
+                                                        <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                        })
+                                )
+                            })}
+                        </div>
                         :
                         ""
                     }
