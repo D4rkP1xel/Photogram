@@ -201,7 +201,7 @@ function PostPage() {
 
                     }
                     {comments !== undefined ?
-                            <div className='max-h-96 overflow-auto'>
+                        <div className='max-h-96 overflow-auto'>
                             {comments?.map((comment, index) => {
                                 return (
                                     <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>

@@ -5,7 +5,7 @@ import Header from '../components/header'
 import HeaderNotLogged from '../components/headerNotLogged'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import axios from '../utils/axiosConfig'
-import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
+import { IoMdHeartEmpty, IoMdHeart, IoMdClose } from 'react-icons/io'
 import { BsChat } from 'react-icons/bs'
 import toDate from '../utils/toDate'
 
@@ -20,6 +20,7 @@ function Home() {
     }, { enabled: !!session })
 
     const [last_post_id, setLast_post_id] = useState(null)
+    const [isShowPost, setShowPost] = useState(null)
 
     async function getInfinitePosts(last_post_id_param) {
         try {
@@ -46,39 +47,72 @@ function Home() {
     const { data: posts, refetch } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
 
-        async function changeLike({setLike, postIndex: index}) {
-         
-            const postInfo = queryClient.getQueryData(["timeline_posts"])[index]
-            if (setLike === false) {
-                await axios.post("/posts/removeLike", { post_id: postInfo.id, user_id: userInfo.id })
-                return false
-            }
-    
-            if (setLike === true) {
-                await axios.post("/posts/addLike", { post_id: postInfo.id, user_id: userInfo.id })
-                return true
-            }
-            return null
+    async function changeLike({ setLike, postIndex: index }) {
+
+        const postInfo = queryClient.getQueryData(["timeline_posts"])[index]
+        if (setLike === false) {
+            await axios.post("/posts/removeLike", { post_id: postInfo.id, user_id: userInfo.id })
+            return false
         }
 
-    const { mutate } = useMutation((vars)=>changeLike(vars), {
+        if (setLike === true) {
+            await axios.post("/posts/addLike", { post_id: postInfo.id, user_id: userInfo.id })
+            return true
+        }
+        return null
+    }
+
+    const { mutate } = useMutation((vars) => changeLike(vars), {
         onMutate: ({ setLike, postIndex: index }) => {
 
             // queryClient.cancelQueries({ queryKey: ["timeline_posts"] }) => this was breaking the mutation function easily
             let currentPostInfo = queryClient.getQueryData(["timeline_posts"])[index]
             console.log(currentPostInfo)
-            if(setLike===true)
-            {
+            if (setLike === true) {
                 currentPostInfo.num_likes++
                 currentPostInfo.is_liked = 1
             }
-            if(setLike===false)
-            {
+            if (setLike === false) {
                 currentPostInfo.num_likes--
                 currentPostInfo.is_liked = 0
             }
         }//maybe do the onError
     })
+
+    function showPost() {
+        return isShowPost !== null ?
+            (
+                <>
+                    <div className='z-50 fixed top-0 left-0 w-full pointer-events-none'>
+                        <div className=' lg:w-[1000px] w-full lg:max-h-[580px] mx-auto mt-28 lg:flex lg:gap-2 bg-slate-500 pointer-events-auto'>
+                            <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
+                                <div className={'w-full h-full bg-slate-300'}></div>
+                                <div className='flex px-4 pt-3'>
+                                    <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                                </div>
+                                <div className='ml-6 h-4 w-14 bg-slate-300 rounded-full'></div>
+                            </div>
+                            <div className='w-full md:max-w-[600px] px-6 mx-auto max-h-full'>
+                                <div onClick={()=>setShowPost(null)} className='h-16 w-16 ml-auto mt-4 p-[12px] cursor-pointer'><IoMdClose className='h-full w-auto'/></div>
+                                <div className='md:max-w-[600px] sm:mx-auto w-full'>
+                                    <div className='flex gap-4 pt-4'>
+                                        <div className='flex items-center gap-4 flex-shrink-0 h-fit'>
+                                            <div className='h-12 w-12 rounded-full bg-slate-300'></div>
+                                            <div className='h-4 w-20 rounded-full bg-slate-300'></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onClick={()=>setShowPost(null)} className='fixed top-0 left-0 w-full h-screen bg-black opacity-30 z-40'></div>
+                </>
+
+            )
+            :
+            ""
+    }
     return (
         <>
             {
@@ -90,7 +124,7 @@ function Home() {
                                 posts.map((postInfo, index) => {
                                     return (
                                         <div key={postInfo.id} className='w-full my-10'>
-                                            <div onClick={()=>router.push("/user/" + postInfo.user_id)} className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
+                                            <div onClick={() => router.push("/user/" + postInfo.user_id)} className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
                                                 <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.user_photo_url} alt="" referrerPolicy="no-referrer" />
                                                 <div className='mx-4 font-semibold cursor-pointer select-none'>{postInfo.username}</div>
                                             </div>
@@ -118,8 +152,8 @@ function Home() {
                                                         </div>
                                                     </div>
                                                 </> : ""}
-                                                {postInfo.num_comments > 0 ? <div onClick={TODO} className="text-sm text-slate-500 select-none cursor-pointer">show comments ({postInfo.num_comments})</div> : ""}
-                                                
+                                                {postInfo.num_comments > 0 ? <div onClick={() => setShowPost(postInfo)} className="text-sm text-slate-500 select-none cursor-pointer">show comments ({postInfo.num_comments})</div> : ""}
+
                                                 <div className="text-xs text-slate-400 mt-2">{toDate(postInfo.date)}</div>
                                             </div>
                                         </div>
@@ -128,6 +162,7 @@ function Home() {
                                 : ""}
                         </div>
                         <button onClick={() => refetch()}>ayo</button>
+                        {showPost()}
 
                     </>
                     :
