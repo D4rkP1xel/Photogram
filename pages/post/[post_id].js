@@ -6,6 +6,7 @@ import Header from '../../components/header'
 import { useRef, useState } from 'react'
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 import toDate from '../../utils/toDate'
+import toNumLikes from '../../utils/toNumLikes'
 
 function PostPage() {
     const { data: session } = useSession()
@@ -92,12 +93,7 @@ function PostPage() {
         }//maybe do the onError
     })
 
-    function numLikes(likes) {
-        if (likes === 1) {
-            return "1 like"
-        }
-        return likes + " likes"
-    }
+    
     return (
         <>
             <Header userInfo={userInfo} />
@@ -122,7 +118,7 @@ function PostPage() {
                                         <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
                                 }
                             </div>
-                            <div className='px-6 font-semibold select-none mb-1'>{numLikes(postInfo.num_likes)}</div>
+                            <div className='px-6 font-semibold select-none mb-1'>{toNumLikes(postInfo.num_likes)}</div>
                         </>
                         :
                         <>
@@ -141,21 +137,22 @@ function PostPage() {
                         <div className='flex gap-4 pt-4'>
                             {postInfo !== undefined ?
                                 <>
-                                    <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                        <img onClick={() => router.push("/user/" + postInfo.author_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
-                                        <div>
-                                            <div onClick={() => router.push("/user/" + postInfo.author_id)} className='font-medium text-sm select-none cursor-pointer'>{postInfo.author_username}</div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{postInfo.description}</div>
-                                        <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
-                                            <div className='flex gap-2'>
-                                                <span>{toDate(postInfo.date)}</span>
+                                    
+
+                                    <div className='w-full'>
+                                        <div className='flex gap-3'>
+                                            <img onClick={() => router.push("/user/" + postInfo.author_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.author_photo_url} alt="" referrerPolicy="no-referrer" />
+                                            <div className='gap-3 py-2'>
+                                                <span onClick={() => router.push("/user/" + postInfo.author_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{postInfo.author_username}</span>
+                                                <span className='w-fit break-words whitespace-pre-wrap'>{postInfo.description}</span>
+                                                <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                    <div className='flex gap-2'>
+                                                        <span>{toDate(postInfo.date)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-
                                 </>
                                 :
                                 <>
@@ -206,18 +203,18 @@ function PostPage() {
                                 return (
                                     <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
                                         <div className='flex gap-3 py-2'>
-                                            <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
-                                                <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
-                                                <div>
-                                                    <div onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer'>{comment.user_username}</div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className='w-fit break-words mt-2 whitespace-pre-wrap'>{comment.text}</div>
-                                                <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
-                                                    <div className='flex gap-2'>
-                                                        <span>{toDate(comment.date)}</span>
-                                                        <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                            <div className='w-full'>
+                                                <div className='flex gap-3'>
+                                                    <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                    <div className='gap-3 py-2'>
+                                                        <span onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{comment.user_username}</span>
+                                                        <span className='w-fit break-words whitespace-pre-wrap'>{comment.text}</span>
+                                                        <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                            <div className='flex gap-2'>
+                                                                <span>{toDate(comment.date)}</span>
+                                                                <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Header from '../components/header'
 import HeaderNotLogged from '../components/headerNotLogged'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
@@ -8,6 +8,7 @@ import axios from '../utils/axiosConfig'
 import { IoMdHeartEmpty, IoMdHeart, IoMdClose } from 'react-icons/io'
 import { BsChat } from 'react-icons/bs'
 import toDate from '../utils/toDate'
+import toNumLikes from '../utils/toNumLikes'
 
 function Home() {
     const queryClient = useQueryClient()
@@ -18,10 +19,41 @@ function Home() {
             email: session.user.email
         }).then((res) => res.data.data)
     }, { enabled: !!session })
-
+    const { data: comments, refetch: refetchComments, remove: removeComments } = useQuery(["comments"], async () => { return isShowPost != null ? axios.post("/posts/getComments", { post_id: isShowPost.id }).then((res) => res.data.data) : null }, { enabled: !!userInfo })
+    const [hasNextPage, setHasNextPage] = useState(false)
     const [last_post_id, setLast_post_id] = useState(null)
     const [isShowPost, setShowPost] = useState(null)
 
+    const commentTextAreaRef = useRef()
+    const [commentText, addCommentText] = useState("")
+
+    useEffect(() => {
+
+        if (isShowPost != null)
+            refetchComments()
+
+    }, [isShowPost])
+
+
+    function addCommentOnChange(e) {
+
+        addCommentText(e.target.value)
+        e.target.style.height = "24px"
+        e.target.style.height = `${e.target.scrollHeight}px`
+    }
+
+
+    function commentLenght() {
+        const maxLength = 400
+        if (commentText.length === 0) {
+            return ""
+        }
+        if (commentText.length > maxLength) {
+            return (<span className='text-red-500'>{commentText.length}/{maxLength}</span>)
+        }
+        return (<span>{commentText.length}/{maxLength}</span>)
+
+    }
     async function getInfinitePosts(last_post_id_param) {
         try {
             let res = await axios.post("/posts/getPosts", { user_id: userInfo.id, last_post_id: last_post_id_param })
@@ -29,9 +61,17 @@ function Home() {
             if (postsRead.length > 0) {
                 setLast_post_id(postsRead[postsRead.length - 1].id)
                 //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
+                if (postsRead.length < 10)
+                    setHasNextPage(false)
+                else
+                    setHasNextPage(true)
+
             }
-            else
+            else {
                 console.log("no new posts")
+                setHasNextPage(false)
+            }
+
 
             let prevArray = queryClient.getQueryData(["timeline_posts"])
             if (prevArray == null)
@@ -44,7 +84,7 @@ function Home() {
         }
     }
 
-    const { data: posts, refetch } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
+    const { data: posts, refetch, isFetching } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
 
     async function changeLike({ setLike, postIndex: index }) {
@@ -67,46 +107,177 @@ function Home() {
 
             // queryClient.cancelQueries({ queryKey: ["timeline_posts"] }) => this was breaking the mutation function easily
             let currentPostInfo = queryClient.getQueryData(["timeline_posts"])[index]
-            console.log(currentPostInfo)
             if (setLike === true) {
                 currentPostInfo.num_likes++
                 currentPostInfo.is_liked = 1
+                if (isShowPost !== null) {
+                    isShowPost.num_likes++
+                    isShowPost.is_liked = 1
+                }
             }
             if (setLike === false) {
                 currentPostInfo.num_likes--
                 currentPostInfo.is_liked = 0
+                if (isShowPost !== null) {
+                    isShowPost.num_likes--
+                    isShowPost.is_liked = 0
+                }
             }
         }//maybe do the onError
     })
 
+    const intObserver = useRef()
+    const lastPostRef = useCallback(post => {
+        if (isFetching) return
+
+        if (intObserver.current) intObserver.current.disconnect()
+
+        intObserver.current = new IntersectionObserver(posts => {
+            if (posts[0].isIntersecting && hasNextPage) {
+                console.log('We are near the last post!')
+                refetch()
+            }
+        })
+
+        if (post) intObserver.current.observe(post)
+    }, [isFetching, refetch, hasNextPage])
+
+    function postComment() {
+        if (userInfo == null)
+            return
+
+        if (commentText.length > 400 || commentText.length === 0) {
+            alert("Comment length not permitted")
+            return
+        }
+        mutateNewComment({newComment: { date: new Date(), user_id: userInfo.id, text: commentText, user_photo_url: userInfo.photo_url, user_username: userInfo.username }, postIndex: isShowPost.index} )
+
+    }
+
+    async function addCommentMutation() {
+        if (isShowPost != null && userInfo != null)
+            return await axios.post("/posts/addComment", { parentId: isShowPost.id, isFromPost: true, comment: commentText, user_id: userInfo.id })
+    }
+
+    const { mutate: mutateNewComment } = useMutation(addCommentMutation, {
+        onMutate: ({newComment, postIndex: index}) => {
+
+            queryClient.cancelQueries({ queryKey: ["comments"] })
+            let currentPostInfo = queryClient.getQueryData(["timeline_posts"])[index]
+            queryClient.setQueryData(["comments"], (prev) => { return [newComment, ...prev] })
+            addCommentText("")
+            currentPostInfo.num_comments++
+            if(isShowPost != null) //not needed yet but did it just in case I need it later
+            {
+                isShowPost.num_comments++
+            }
+        }//maybe do the onError
+
+    })
+
     function showPost() {
+        const html = document.querySelector('html');
+        isShowPost !== null && html ? html.style.overflow = 'hidden' : html.style.overflow = 'auto'
+
         return isShowPost !== null ?
             (
                 <>
+
                     <div className='z-50 fixed top-0 left-0 w-full pointer-events-none'>
-                        <div className=' lg:w-[1000px] w-full lg:max-h-[580px] mx-auto mt-28 lg:flex lg:gap-2 bg-slate-500 pointer-events-auto'>
+                        <div className=' lg:w-[1000px] w-full lg:max-h-[600px] mx-auto mt-24 lg:flex lg:gap-2 bg-white pointer-events-auto pb-4'>
                             <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
-                                <div className={'w-full h-full bg-slate-300'}></div>
+                                <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${isShowPost.photo_url}')` }}></div>
                                 <div className='flex px-4 pt-3'>
-                                    <div className='h-10 w-10 ml-2 mb-2 px-2 pb-2 bg-slate-300 rounded-full'></div>
+                                    {isShowPost.is_liked === 1 ?
+                                        <div onClick={() => mutate({ setLike: false, postIndex: isShowPost.index })} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                            <IoMdHeart className='h-full w-auto' />
+                                        </div>
+                                        :
+                                        <div onClick={() => mutate({ setLike: true, postIndex: isShowPost.index })} className='h-12 w-14 px-2 pb-2 cursor-pointer'>
+                                            <IoMdHeartEmpty className='h-full w-auto' />
+                                        </div>}
                                 </div>
-                                <div className='ml-6 h-4 w-14 bg-slate-300 rounded-full'></div>
+                                <div className='px-6 font-semibold select-none mb-1'>{toNumLikes(isShowPost.num_likes)}</div>
                             </div>
                             <div className='w-full md:max-w-[600px] px-6 mx-auto max-h-full'>
-                                <div onClick={()=>setShowPost(null)} className='h-16 w-16 ml-auto mt-4 p-[12px] cursor-pointer'><IoMdClose className='h-full w-auto'/></div>
                                 <div className='md:max-w-[600px] sm:mx-auto w-full'>
                                     <div className='flex gap-4 pt-4'>
-                                        <div className='flex items-center gap-4 flex-shrink-0 h-fit'>
-                                            <div className='h-12 w-12 rounded-full bg-slate-300'></div>
-                                            <div className='h-4 w-20 rounded-full bg-slate-300'></div>
+                                        <div className='w-full'>
+                                            <div className='flex gap-3'>
+                                                <img onClick={() => router.push("/user/" + isShowPost.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={isShowPost.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                <div className='gap-3 py-2'>
+                                                    <span onClick={() => router.push("/user/" + isShowPost.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{isShowPost.username}</span>
+                                                    <span className='w-fit break-words whitespace-pre-wrap'>{isShowPost.description}</span>
+                                                    <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                        <div className='flex gap-2'>
+                                                            <span>{toDate(isShowPost.date)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                <hr className='md:max-w-[600px] sm:mx-auto w-full my-2' />
+                                <div className='flex gap-3 py-2'>
+                                    <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
+                                        <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={userInfo?.photo_url} alt="" referrerPolicy="no-referrer" />
+                                        <div>
+                                            <div className='font-medium text-sm cursor-pointer'>{userInfo?.username}</div>
+                                        </div>
+                                    </div>
+                                    <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
+                                    <div className='font-semibold text-gray-500  mt-2 mb-auto select-none'>
+                                        {commentText.length <= 400 ?
+                                            <div onClick={() => postComment()} className='cursor-pointer'>Post</div>
+                                            :
+                                            <div className='text-slate-300'>Post</div>
+                                        }
+
+                                        <div className='absolute text-[12px] font-thin'>{commentLenght()}</div>
+
+                                    </div>
+
+                                </div>
+                                {comments !== undefined ?
+                                    <div className='max-h-96 overflow-auto'>
+                                        {comments?.map((comment, index) => {
+                                            return (
+                                                <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
+                                                    <div className='flex gap-3 py-2'>
+                                                        <div className='w-full'>
+                                                            <div className='flex gap-3'>
+                                                                <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                                <div className='gap-3 py-2'>
+                                                                    <span onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{comment.user_username}</span>
+                                                                    <span className='w-fit break-words whitespace-pre-wrap'>{comment.text}</span>
+                                                                    <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                                        <div className='flex gap-2'>
+                                                                            <span>{toDate(comment.date)}</span>
+                                                                            <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    :
+                                    ""
+                                }
                             </div>
                         </div>
                     </div>
+                    <div className='fixed w-full top-0 left-0 z-50'>
+                        <div className='flex w-full'>
+                            <div onClick={() => { setShowPost(null); addCommentText(""); removeComments() }} className='h-16 w-16 ml-auto mt-2 mr-2 p-[12px] cursor-pointer text-slate-100'><IoMdClose className='h-full w-auto' /></div>
+                        </div>
+                    </div>
+                    <div onClick={() => { setShowPost(null); addCommentText(""); removeComments() }} className='fixed top-0 left-0 w-full h-screen bg-black opacity-50 z-40'></div>
 
-                    <div onClick={()=>setShowPost(null)} className='fixed top-0 left-0 w-full h-screen bg-black opacity-30 z-40'></div>
                 </>
 
             )
@@ -123,7 +294,7 @@ function Home() {
                             {posts != null ?
                                 posts.map((postInfo, index) => {
                                     return (
-                                        <div key={postInfo.id} className='w-full my-10'>
+                                        <div key={postInfo.id} ref={index === posts.length - 1 ? lastPostRef : null} className='w-full my-10'>
                                             <div onClick={() => router.push("/user/" + postInfo.user_id)} className='bg-slate-200 rounded-t-2xl p-4 items-center flex w-full'>
                                                 <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={postInfo.user_photo_url} alt="" referrerPolicy="no-referrer" />
                                                 <div className='mx-4 font-semibold cursor-pointer select-none'>{postInfo.username}</div>
@@ -147,12 +318,12 @@ function Home() {
                                                 {postInfo.description !== null ? <>
                                                     <div className='w-full'>
                                                         <div className='gap-3 py-2'>
-                                                            <span className='font-medium text-sm cursor-pointer h-fit mr-2'>{postInfo.username}</span>
+                                                            <span onClick={() => router.push("/user/" + postInfo.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{postInfo.username}</span>
                                                             <span className='w-fit break-words whitespace-pre-wrap'>{postInfo.description}</span>
                                                         </div>
                                                     </div>
                                                 </> : ""}
-                                                {postInfo.num_comments > 0 ? <div onClick={() => setShowPost(postInfo)} className="text-sm text-slate-500 select-none cursor-pointer">show comments ({postInfo.num_comments})</div> : ""}
+                                                {postInfo.num_comments > 0 ? <div onClick={() => setShowPost({ ...postInfo, index })} className="text-sm text-slate-500 select-none cursor-pointer">show comments ({postInfo.num_comments})</div> : ""}
 
                                                 <div className="text-xs text-slate-400 mt-2">{toDate(postInfo.date)}</div>
                                             </div>
@@ -161,8 +332,8 @@ function Home() {
                                 })
                                 : ""}
                         </div>
-                        <button onClick={() => refetch()}>ayo</button>
-                        {showPost()}
+
+                        {posts != null ? showPost() : ""}
 
                     </>
                     :
