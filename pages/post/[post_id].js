@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router'
 import axios from '../../utils/axiosConfig'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 import toDate from '../../utils/toDate'
 import toNumLikes from '../../utils/toNumLikes'
@@ -18,12 +18,56 @@ function PostPage() {
             email: session.user.email
         }).then((res) => res.data.data)
     }, { enabled: !!session })
-    const { data: postInfo } = useQuery(["post_info"], async () => { return axios.post("/posts/getPost", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
-    const { data: comments } = useQuery(["comments"], async () => { return axios.post("/posts/getComments", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id })
+    const [last_comment_id, setLast_comment_id] = useState(null)
+    const { data: postInfo } = useQuery(["post_info"], async () => { return axios.post("/posts/getPost", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id, refetchOnWindowFocus: false })
+    const { data: comments, refetch: refetchComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return getInfiniteComments(last_comment_id) }, { enabled: !!post_id, refetchOnWindowFocus: false })
     const { data: isLike } = useQuery(["is_like"], async () => { return axios.post("/posts/getLike", { post_id: post_id, user_id: userInfo.id }).then((res) => res.data.is_like) }, { enabled: !!postInfo && !!userInfo })
     const commentTextAreaRef = useRef()
     const [commentText, addCommentText] = useState("")
+    const [hasCommentsNextPage, setHasCommentsNextPage] = useState(false)
+    async function getInfiniteComments(last_comment_id_param) {
+        try {
+            let res = await axios.post("/posts/getComments", { post_id: post_id, last_comment_id: last_comment_id_param })
+            let commentsRead = res.data.comments
+            if (commentsRead.length > 0) {
+                setLast_comment_id(commentsRead[commentsRead.length - 1].id)
+                //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
+                if (commentsRead.length < 10)
+                    setHasCommentsNextPage(false)
+                else
+                    setHasCommentsNextPage(true)
+            }
+            else {
+                console.log("no new posts")
+                setHasCommentsNextPage(false)
+            }
 
+            let prevArray = queryClient.getQueryData(["comments"])
+            if (prevArray == null)
+                return commentsRead
+            return [...prevArray, ...commentsRead]
+        }
+        catch (err) {
+            console.log(err)
+            return null
+        }
+    }
+
+    const intObserverComment = useRef()
+    const lastCommentRef = useCallback(comment => {
+        if (isCommentsFetching) return
+
+        if (intObserverComment.current) intObserverComment.current.disconnect()
+
+        intObserverComment.current = new IntersectionObserver(comments => {
+            if (comments[0].isIntersecting && hasCommentsNextPage) {
+                //console.log('We are near the last comment!')
+                refetchComments()
+            }
+        })
+
+        if (comment) intObserverComment.current.observe(comment)
+    }, [isCommentsFetching, refetchComments, hasCommentsNextPage])
 
     function addCommentOnChange(e) {
 
@@ -197,11 +241,12 @@ function PostPage() {
                         ""
 
                     }
+                    
                     {comments !== undefined ?
                         <div className='max-h-96 overflow-auto'>
                             {comments?.map((comment, index) => {
                                 return (
-                                    <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
+                                    <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
                                         <div className='flex gap-3 py-2'>
                                             <div className='w-full'>
                                                 <div className='flex gap-3'>

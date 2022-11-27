@@ -14,16 +14,23 @@ function Home() {
     const queryClient = useQueryClient()
     const router = useRouter()
     const { data: session } = useSession()
+
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
             email: session.user.email
         }).then((res) => res.data.data)
     }, { enabled: !!session })
-    const { data: comments, refetch: refetchComments, remove: removeComments } = useQuery(["comments"], async () => { return isShowPost != null ? axios.post("/posts/getComments", { post_id: isShowPost.id }).then((res) => res.data.data) : null }, { enabled: !!userInfo })
+
+    const { data: posts, refetch, isFetching } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
+        { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
+
+    const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id ,last_comment_id) : null }, { enabled: !!userInfo })
+   
     const [hasNextPage, setHasNextPage] = useState(false)
+    const [last_comment_id, setLast_comment_id] = useState(null)
     const [last_post_id, setLast_post_id] = useState(null)
     const [isShowPost, setShowPost] = useState(null)
-
+    const [hasCommentsNextPage, setHasCommentsNextPage] = useState(false)
     const commentTextAreaRef = useRef()
     const [commentText, addCommentText] = useState("")
 
@@ -34,6 +41,33 @@ function Home() {
 
     }, [isShowPost])
 
+    async function getInfiniteComments(post_id_param, last_comment_id_param) {
+        try {
+            let res = await axios.post("/posts/getComments", { post_id: post_id_param , last_comment_id: last_comment_id_param })
+            let commentsRead = res.data.comments
+            if (commentsRead.length > 0) {
+                setLast_comment_id(commentsRead[commentsRead.length - 1].id)
+                //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
+                if (commentsRead.length < 10)
+                    setHasCommentsNextPage(false)
+                else
+                    setHasCommentsNextPage(true)
+            }
+            else {
+                console.log("no new posts")
+                setHasCommentsNextPage(false)
+            }
+
+            let prevArray = queryClient.getQueryData(["comments"])
+            if (prevArray == null)
+                return commentsRead
+            return [...prevArray, ...commentsRead]
+        }
+        catch (err) {
+            console.log(err)
+            return null
+        }
+    }
 
     function addCommentOnChange(e) {
 
@@ -84,8 +118,6 @@ function Home() {
         }
     }
 
-    const { data: posts, refetch, isFetching } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
-        { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
 
     async function changeLike({ setLike, postIndex: index }) {
 
@@ -175,6 +207,31 @@ function Home() {
 
     })
 
+    const intObserverComment = useRef()
+    const lastCommentRef = useCallback(comment => {
+        if (isCommentsFetching) return
+
+        if (intObserverComment.current) intObserverComment.current.disconnect()
+
+        intObserverComment.current = new IntersectionObserver(comments => {
+            if (comments[0].isIntersecting && hasCommentsNextPage) {
+                //console.log('We are near the last comment!')
+                refetchComments()
+            }
+        })
+
+        if (comment) intObserverComment.current.observe(comment)
+    }, [isCommentsFetching, refetchComments, hasCommentsNextPage])
+
+    function resetComments()
+    {
+        setShowPost(null)
+        addCommentText("")
+        removeComments()
+        setHasCommentsNextPage(false) 
+        lastCommentRef(null)
+        setLast_comment_id(null)
+    }
     function showPost() {
         const html = document.querySelector('html');
         isShowPost !== null && html ? html.style.overflow = 'hidden' : html.style.overflow = 'auto'
@@ -243,7 +300,7 @@ function Home() {
                                     <div className='max-h-96 overflow-auto'>
                                         {comments?.map((comment, index) => {
                                             return (
-                                                <div key={index} className='md:max-w-[600px] sm:mx-auto w-full '>
+                                                <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
                                                     <div className='flex gap-3 py-2'>
                                                         <div className='w-full'>
                                                             <div className='flex gap-3'>
@@ -273,10 +330,10 @@ function Home() {
                     </div>
                     <div className='fixed w-full top-0 left-0 z-50'>
                         <div className='flex w-full'>
-                            <div onClick={() => { setShowPost(null); addCommentText(""); removeComments() }} className='h-16 w-16 ml-auto mt-2 mr-2 p-[12px] cursor-pointer text-slate-100'><IoMdClose className='h-full w-auto' /></div>
+                            <div onClick={() => resetComments() } className='h-16 w-16 ml-auto mt-2 mr-2 p-[12px] cursor-pointer text-slate-100'><IoMdClose className='h-full w-auto' /></div>
                         </div>
                     </div>
-                    <div onClick={() => { setShowPost(null); addCommentText(""); removeComments() }} className='fixed top-0 left-0 w-full h-screen bg-black opacity-50 z-40'></div>
+                    <div onClick={() => resetComments() } className='fixed top-0 left-0 w-full h-screen bg-black opacity-50 z-40'></div>
 
                 </>
 
