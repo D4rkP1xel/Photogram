@@ -13,7 +13,7 @@ import toNumLikes from '../utils/toNumLikes'
 function Home() {
     const queryClient = useQueryClient()
     const router = useRouter()
-    const { data: session } = useSession()
+    const { data: session, status: sessionStatus } = useSession()
 
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
@@ -394,8 +394,11 @@ function Home() {
 
                     </>
                     :
+                    sessionStatus === "unauthorized" ?
+                    <>  <HeaderNotLogged /> </>
+                    :
                     <>
-                        <HeaderNotLogged />
+                        <Header userInfo={userInfo} />
 
                     </>
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {signOut} from 'next-auth/react'
 import { useRouter } from 'next/router'
+
 function Header({ userInfo }) {
   const router = useRouter()
   const [isMenuOpened, openMenu] = useState(false)
