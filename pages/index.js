@@ -322,6 +322,7 @@ function Home() {
                                                 </div>
                                             )
                                         })}
+                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader' /> : null }
                                     </div>
                                     :
                                     ""
