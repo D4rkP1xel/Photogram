@@ -15,7 +15,7 @@ function SettingsPage() {
         }).then((res) => res.data.data)
     }, { enabled: !!session })
 
-    const [optionPage, setOptionPage] = useState("profile")       //accepted values: profile,
+    const [optionPage, setOptionPage] = useState(1)
     const descriptionTextAreaRef = useRef()
     const [descriptionText, addDescription] = useState("")
 
@@ -28,10 +28,16 @@ function SettingsPage() {
     const queryClient = useQueryClient()
 
     useEffect(() => {
-        if (description !== undefined && descriptionTextAreaRef !== null) {
+        if (description !== undefined && descriptionTextAreaRef != null && optionPage === 1) {
+           
             addDescription(description)
+            setTimeout(() => {
+                descriptionTextAreaRef.current.style.height = "28px"
+                descriptionTextAreaRef.current.style.height = `${descriptionTextAreaRef.current.scrollHeight}px`
+            }, 100);
+
         }
-    }, [description])
+    }, [description, descriptionTextAreaRef, optionPage])
 
     const { mutate } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: descriptionText }), {
         onMutate: (newDescription) => {
@@ -43,7 +49,7 @@ function SettingsPage() {
     })
     const maxLength = 240
 
-    
+
 
     function addCommentOnChange(e) {
 
@@ -51,8 +57,7 @@ function SettingsPage() {
         changeTextAreaSize(e)
     }
 
-    function changeTextAreaSize(e)
-    {
+    function changeTextAreaSize(e) {
         e.target.style.height = "28px"
         e.target.style.height = `${e.target.scrollHeight}px`
     }
@@ -86,38 +91,45 @@ function SettingsPage() {
     }
 
     function handleOption() {
-        if (optionPage === "profile") {
-            return (
-                <div className='w-full bg-slate-100 py-4 px-8 flex flex-col'>
-                    <div className='flex gap-4 mt-4'>
-                        <span className='shrink-0'>Change Profile Description</span>
-                        {description !== undefined ?
-                            <>
-                                <textarea ref={descriptionTextAreaRef} onFocus={(e)=>changeTextAreaSize(e)} onChange={addCommentOnChange} value={descriptionText} className='overflow-hidden whitespace-pre-wrap border border-slate-400 w-full h-[28px] pb-1'></textarea>
-                                <div className='mt-1 w-20 text-[12px] font-thin text-center'>{descriptionLenght()}</div>
-                            </>
 
-                            :
-                            ""
-                        }
+        return (
+            <div className='w-full bg-slate-100 py-4 px-8 flex flex-col'>
+                {optionPage === 1 ?
+                    <>
+                        <div className='flex gap-4 mt-4'>
+                            <span className='shrink-0'>Change Profile Description</span>
+                            {description !== undefined ?
+                                <>
+                                    <textarea ref={descriptionTextAreaRef} onFocus={(e) => changeTextAreaSize(e)} onChange={addCommentOnChange} value={descriptionText} className='overflow-hidden whitespace-pre-wrap border border-slate-400 w-full h-[28px] pb-1'></textarea>
+                                    <div className='mt-1 w-20 text-[12px] font-thin text-center'>{descriptionLenght()}</div>
+                                </>
 
-                    </div>
-                    <div onClick={async () => await saveSettings()} className='ml-auto mt-auto rounded-full px-6 py-2 cursor-pointer duration-200 ease-in bg-blue-500 hover:bg-blue-600 w-fit text-white'>Save</div>
+                                :
+                                ""
+                            }
+
+                        </div>
+                        <div onClick={async () => await saveSettings()} className='ml-auto mt-auto rounded-full px-6 py-2 cursor-pointer duration-200 ease-in bg-blue-500 hover:bg-blue-600 w-fit text-white'>Save</div>
+                    </>
+                    :
+                    optionPage === 2 ?
+                        <></>
+                        :
+                        ""
+                }
+            </div>
+        )
 
 
-                </div>
-            )
-        }
-        return ""
     }
     return (
         <>
             <Header userInfo={userInfo} />
             <div className='lg:w-[1000px] w-full mx-auto mt-8 flex'>
                 <div className='w-96 bg-slate-100 h-[600px] border-r border-slate-200 select-none'>
-                    <div className='h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in border-r-2 border-black'>Profile Settings</div>
-                    {/* <div className='h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'>Profile Settings</div>
-                    <div className='h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'>Profile Settings</div>
+                    <div onClick={() => setOptionPage(1)} className={optionPage === 1 ? 'h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in border-r-2 border-black' : 'h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'}>Profile Settings</div>
+                    <div onClick={() => setOptionPage(2)} className={optionPage === 2 ? 'h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in border-r-2 border-black' : 'h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'}>Account Settings</div>
+                    {/*<div className='h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'>Profile Settings</div>
                     <div className='h-12 flex items-center pl-4 w-full text-sm cursor-pointer hover:bg-slate-200 duration-100 ease-in'>Profile Settings</div> */}
                 </div>
                 {handleOption()}
