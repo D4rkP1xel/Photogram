@@ -389,7 +389,7 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                <ScaleLoader color="bg-slate-200"/>
+                                <ScaleLoader color="gray"/>
                         </div>
                         
                         {posts != null ? showPost() : ""}
