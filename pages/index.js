@@ -395,13 +395,9 @@ function Home() {
                     </>
                     :
                     sessionStatus === "unauthorized" ?
-                    <>  <HeaderNotLogged /> </>
+                        <HeaderNotLogged /> 
                     :
-                    <>
                         <Header userInfo={userInfo} />
-
-                    </>
-
             }
         </>
     )
