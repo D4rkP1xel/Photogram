@@ -389,7 +389,7 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                <ScaleLoader color="gray"/>
+                                <ScaleLoader className='mx-auto text-slate-400' />
                         </div>
                         
                         {posts != null ? showPost() : ""}
