@@ -389,7 +389,7 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                <ScaleLoader className='mx-auto w-fit !text-slate-400' />
+                                <ScaleLoader className='mx-auto w-fit scale-loader' />
                         </div>
                         
                         {posts != null ? showPost() : ""}

@@ -6,3 +6,8 @@ textarea
 {
     resize: none;
 }
+
+.scale-loader > span
+{
+    background-color: rgb(148,163,184) !important;
+}
