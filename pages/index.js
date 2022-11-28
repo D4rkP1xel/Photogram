@@ -389,8 +389,9 @@ function Home() {
                                     )
                                 })
                                 : ""}
+                                <ScaleLoader color="bg-slate-200"/>
                         </div>
-                        <ScaleLoader />
+                        
                         {posts != null ? showPost() : ""}
 
                     </>
