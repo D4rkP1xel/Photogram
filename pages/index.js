@@ -322,7 +322,7 @@ function Home() {
                                                 </div>
                                             )
                                         })}
-                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader' /> : null }
+                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null }
                                     </div>
                                     :
                                     ""
@@ -390,7 +390,8 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader' /> : null }
+                                {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null }
+                            
                         </div>
                         
                         {posts != null ? showPost() : ""}
