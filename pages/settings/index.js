@@ -29,7 +29,7 @@ function SettingsPage() {
 
     useEffect(() => {
         if (description !== undefined && descriptionTextAreaRef != null && optionPage === 1) {
-           
+
             addDescription(description)
             setTimeout(() => {
                 descriptionTextAreaRef.current.style.height = "28px"
@@ -113,7 +113,21 @@ function SettingsPage() {
                     </>
                     :
                     optionPage === 2 ?
-                        <></>
+                        <>
+                            <div className='flex gap-4 mt-4'>
+                                <span className='shrink-0'>Change Username</span>
+                                <input className='w-full'></input>
+                            </div>
+                            <div className='flex gap-4 mt-4 py-8'>
+                                <span className='shrink-0'>Change Avatar</span>
+                                {userInfo !== undefined ?
+                                    <img className='h-40 w-40 cursor-pointer' alt="" src={userInfo.photo_url} />
+                                    :
+                                    <div className='h-40 w-40 bg-slate-300'></div>
+                                }
+
+                            </div>
+                        </>
                         :
                         ""
                 }
