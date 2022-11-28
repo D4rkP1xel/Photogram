@@ -103,7 +103,7 @@ function Home() {
 
             }
             else {
-                console.log("no new posts")
+                //console.log("no new posts")
                 setHasNextPage(false)
             }
 
@@ -167,7 +167,7 @@ function Home() {
 
         intObserver.current = new IntersectionObserver(posts => {
             if (posts[0].isIntersecting && hasNextPage) {
-                console.log('We are near the last post!')
+                //console.log('We are near the last post!')
                 refetch()
             }
         })
@@ -381,8 +381,8 @@ function Home() {
                                                             <span className='w-fit break-words whitespace-pre-wrap'>{postInfo.description}</span>
                                                         </div>
                                                     </div>
-                                                </> : ""}
-                                                {postInfo.num_comments > 0 ? <div onClick={() => setShowPost({ ...postInfo, index })} className="text-sm text-slate-500 select-none cursor-pointer">show comments ({postInfo.num_comments})</div> : ""}
+                                                </> : <div className='h-2 w-full'></div>}
+                                                {postInfo.num_comments > 0 ? <div onClick={() => setShowPost({ ...postInfo, index })} className="text-sm text-slate-500 select-none cursor-pointer w-fit">show comments ({postInfo.num_comments})</div> : <div onClick={() => setShowPost({ ...postInfo, index })} className="text-sm text-slate-500 select-none cursor-pointer w-fit">show more...</div>}
 
                                                 <div className="text-xs text-slate-400 mt-2">{toDate(postInfo.date)}</div>
                                             </div>
