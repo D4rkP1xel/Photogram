@@ -9,6 +9,7 @@ import { IoMdHeartEmpty, IoMdHeart, IoMdClose } from 'react-icons/io'
 import { BsChat } from 'react-icons/bs'
 import toDate from '../utils/toDate'
 import toNumLikes from '../utils/toNumLikes'
+import {ScaleLoader} from 'react-spinners'
 
 function Home() {
     const queryClient = useQueryClient()
@@ -389,7 +390,7 @@ function Home() {
                                 })
                                 : ""}
                         </div>
-
+                        <ScaleLoader />
                         {posts != null ? showPost() : ""}
 
                     </>
