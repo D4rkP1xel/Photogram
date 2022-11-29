@@ -21,9 +21,9 @@ function SignIn() {
         return 
     }
     return (
-        <div className="sm:w-8/12 lg:w-6/12 py-14 bg-green-600 mx-auto translate-y-24" style={{boxShadow: "0px 0px 6px 0px rgba(0,0,0,0.2)"}}>
+        <div className="sm:w-8/12 lg:w-6/12 py-14 bg-slate-300 mx-auto translate-y-24" style={{boxShadow: "0px 0px 6px 0px rgba(0,0,0,0.2)"}}>
             <div className="flex justify-center mb-14">
-                <img className="h-48" src="/login-icon.png" />
+                <img className="h-48" src="/instagram-logo.png" />
             </div>
 
             <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google", {callbackUrl: process.env.NEXT_PUBLIC_NEXTAUTH_URL}) }>
