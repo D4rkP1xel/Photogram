@@ -22,6 +22,7 @@ export const authOptions = {
       if (account) {
         token.accessToken = account.access_token
         token.id = profile.id
+        token.provider = account.provider
       }
       return token
     },
