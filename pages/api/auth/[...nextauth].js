@@ -13,23 +13,23 @@ export const authOptions = {
       })
   ],
   secret: process.env.JWT_SECRET ,
-  pages: {
-    signIn: '/signin'
-  },
   callbacks: {
     async jwt({ token, account, profile }) {
       // Persist the OAuth access_token and or the user id to the token right after signin
       
-        
+        if(profile)
+          token.provider = account.provider
     
-      return {...token, ...account, ...profile}
+      return token
     },
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token and user id from a provider.
-      session.token = token
-      session.otheruser = user
+      session.provider = token.provider
       return session
     }
+  },
+  pages: {
+    signIn: '/signin'
   }
 }
 export default NextAuth(authOptions)

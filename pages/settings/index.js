@@ -3,20 +3,24 @@ import Header from '../../components/header'
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from '../../utils/axiosConfig'
-
+import checkSessionProvider from '../../utils/checkSessionProvider'
+import { useRouter } from 'next/router'
+import { BsPlusLg } from 'react-icons/bs'
 
 
 function SettingsPage() {
     const { data: session } = useSession()
-
+    const router = useRouter()
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-            email: session.user.email
-        }).then((res) => res.data.data)
+            email: session.user.email,
+            provider: session.provider
+        }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
     }, { enabled: !!session })
 
+    const descriptionTextAreaRef= useRef()
     const [optionPage, setOptionPage] = useState(1)
-    const descriptionTextAreaRef = useRef()
+
     const [descriptionText, addDescription] = useState("")
 
     const { data: description } = useQuery(["user_description"], async () => {
@@ -115,13 +119,20 @@ function SettingsPage() {
                     optionPage === 2 ?
                         <>
                             <div className='flex gap-4 mt-4'>
-                                <span className='shrink-0'>Change Username</span>
+                                <span className='shrink-0 w-36'>Change Username</span>
                                 <input className='w-full'></input>
                             </div>
                             <div className='flex gap-4 mt-4 py-8'>
-                                <span className='shrink-0'>Change Avatar</span>
+                                <span className='shrink-0 w-36'>Change Avatar</span>
                                 {userInfo !== undefined ?
-                                    <img className='h-40 w-40 cursor-pointer' alt="" src={userInfo.photo_url} />
+                                    <>
+                                        <div>
+                                            <div onMouseEnter={(e)=>e.target.style.opacity = ".5"} onMouseLeave={(e)=>e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
+                                                <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto' />
+                                            </div>
+                                            <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
+                                        </div>
+                                    </>
                                     :
                                     <div className='h-40 w-40 bg-slate-300'></div>
                                 }

@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react'
 import Loading from '../components/loading'
 import Header from '../components/header'
 import { BsFillFileEarmarkImageFill, BsXLg, BsPlusLg } from 'react-icons/bs'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef} from 'react'
+import checkSessionProvider from '../utils/checkSessionProvider'
 
 function AddPost() {
   const { data: session } = useSession()
@@ -17,10 +18,12 @@ function AddPost() {
   const [descriptionErrorMessage, setDescriptionErrorMessage] = useState("")
   const { data: userInfo } = useQuery(["user_info"], async () => {
     return axios.post("/user/getUserInfo", {
-      email: session.user.email
-    }).then((res) => res.data.data)
+      email: session.user.email,
+      provider: session.provider
+    }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
   }, { enabled: !!session })
 
+ 
   const uploadImageRef = useRef(null)
   const tagRef = useRef(null)
   const submitTagRef = useRef(null)

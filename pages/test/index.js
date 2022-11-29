@@ -3,17 +3,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import Header from '../../components/header'
 import { useState } from 'react'
-
+import checkSessionProvider from '../../utils/checkSessionProvider'
+import { useRouter } from 'next/router'
 
 function Test() {
     const queryClient = useQueryClient()
     const { data: session } = useSession()
-
+    const router = useRouter()
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-            email: session.user.email
-        }).then((res) => res.data.data)
-    }, { enabled: !!session })
+          email: session.user.email,
+          provider: session.provider
+        }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
+      }, { enabled: !!session })
     const [last_post_id, setLast_post_id] = useState(null)
     async function getInfinitePosts(last_post_id_param)
     {

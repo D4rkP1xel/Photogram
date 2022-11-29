@@ -10,6 +10,7 @@ import { BsChat } from 'react-icons/bs'
 import toDate from '../utils/toDate'
 import toNumLikes from '../utils/toNumLikes'
 import {ScaleLoader} from 'react-spinners'
+import checkSessionProvider from '../utils/checkSessionProvider'
 
 function Home() {
     const queryClient = useQueryClient()
@@ -18,9 +19,10 @@ function Home() {
 
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-            email: session.user.email
-        }).then((res) => res.data.data)
-    }, { enabled: !!session })
+          email: session.user.email,
+          provider: session.provider
+        }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
+      }, { enabled: !!session })
 
     const { data: posts, refetch, isFetching } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
@@ -398,7 +400,7 @@ function Home() {
 
                     </>
                     :
-                    sessionStatus === "unauthorized" ?
+                    sessionStatus === "unauthorized" || !session ?
                         <HeaderNotLogged /> 
                     :
                         <Header userInfo={userInfo} />

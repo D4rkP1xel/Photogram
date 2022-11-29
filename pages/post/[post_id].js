@@ -7,6 +7,7 @@ import { useRef, useState, useCallback } from 'react'
 import { IoMdHeartEmpty, IoMdHeart } from 'react-icons/io'
 import toDate from '../../utils/toDate'
 import toNumLikes from '../../utils/toNumLikes'
+import checkSessionProvider from '../../utils/checkSessionProvider'
 
 function PostPage() {
     const { data: session } = useSession()
@@ -15,9 +16,10 @@ function PostPage() {
     const { post_id } = router.query
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-            email: session.user.email
-        }).then((res) => res.data.data)
-    }, { enabled: !!session })
+          email: session.user.email,
+          provider: session.provider
+        }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
+      }, { enabled: !!session })
     const [last_comment_id, setLast_comment_id] = useState(null)
     const { data: postInfo } = useQuery(["post_info"], async () => { return axios.post("/posts/getPost", { post_id: post_id }).then((res) => res.data.data) }, { enabled: !!post_id, refetchOnWindowFocus: false })
     const { data: comments, refetch: refetchComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return getInfiniteComments(last_comment_id) }, { enabled: !!post_id, refetchOnWindowFocus: false })

@@ -2,7 +2,7 @@ import {useSession, signIn } from 'next-auth/react'
 import {useRouter} from 'next/router'
 
 import Loading from '../components/loading'
-import axios from '../utils/axiosConfig'
+
 
 function SignIn() {
     const router = useRouter()
@@ -13,11 +13,10 @@ function SignIn() {
     {
         return <Loading />
     }
-    if(session)
+    if(session && status === "authenticated")
     {
-        
-        //router.push("/verify?provider=google")
-        console.log(session)
+    
+        router.push(`/verify?provider=${session.provider}`)
         // router.push(router.query?.callbackUrl || "/")
         return 
     }
@@ -27,11 +26,11 @@ function SignIn() {
                 <img className="h-48" src="/instagram-logo.png" />
             </div>
 
-            <div className="flex mb-6 bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google", {callbackUrl: process.env.NEXT_PUBLIC_NEXTAUTH_URL}) }>
+            <div className="flex mb-6 bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("google") }>
                 <img className="h-6" src="/google-logo.png" alt="google-logo" />
                 <span className="py-2">Sign in with Google</span>
             </div>
-            <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("facebook", {callbackUrl: process.env.NEXT_PUBLIC_NEXTAUTH_URL}) }>
+            <div className="flex bg-stone-50 gap-4 justify-center w-3/4 mx-auto border-2 items-center select-none cursor-pointer" onClick={()=>signIn("facebook") }>
                 <img className="h-6" src="/facebook-logo.png" alt="facebook-logo" />
                 <span className="py-2">Sign in with Facebook</span>
             </div>

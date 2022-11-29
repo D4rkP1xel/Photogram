@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react'
 import ProfileContent from '../../components/profilePage/ProfileContent'
 import { useEffect } from 'react'
 import HeaderNotLogged from '../../components/headerNotLogged'
+import checkSessionProvider from '../../utils/checkSessionProvider'
+
 function UserProfilePage() {
     const { data: session, status: sessionStatus } = useSession()
     const router = useRouter()
@@ -13,9 +15,10 @@ function UserProfilePage() {
     const { user_id } = router.query
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-            email: session.user.email
-        }).then((res) => res.data.data)
-    }, { enabled: !!session })
+          email: session.user.email,
+          provider: session.provider
+        }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
+      }, { enabled: !!session })
     const { data: profileInfo, refetch: refreshProfileInfo } = useQuery(["profile_info"], async () => { return axios.get("/user/getProfileInfo/" + user_id).then((res) => res.data.data) }, { enabled: !!user_id })
     const { data: posts, refetch: refreshPosts } = useQuery(["user_posts"], async () => { return axios.get("/posts/user/" + user_id).then((res) => res.data.data) }, { enabled: !!user_id })
 
