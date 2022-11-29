@@ -21,12 +21,13 @@ export const authOptions = {
       // Persist the OAuth access_token and or the user id to the token right after signin
       if (profile) {
         token.provider = account.provider
+        token.account = account
+        token.profile = profile
       }
-      return account
+      return token
     },
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token and user id from a provider.
-      session.user.provider = token.provider || "idk"
       session.token = token
       return session
     }
