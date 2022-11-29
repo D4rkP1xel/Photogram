@@ -20,7 +20,7 @@ export const authOptions = {
     async jwt({ token, account, profile }) {
       // Persist the OAuth access_token and or the user id to the token right after signin
       if (profile) {
-        token.provider = account.provider
+  
         token.account = account
         token.profile = profile
       }
