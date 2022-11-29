@@ -17,9 +17,9 @@ export const authOptions = {
     signIn: '/signin'
   },
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, user }) {
       // Persist the OAuth access_token and or the user id to the token right after signin
-      if (account) {
+      if (user) {
         token.accessToken = account.access_token
         token.id = profile.id
         token.provider = account.provider
