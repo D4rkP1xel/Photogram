@@ -16,7 +16,8 @@ function SignIn() {
     if(session)
     {
         
-        router.push("/verify?provider=google")
+        //router.push("/verify?provider=google")
+        console.log(session)
         // router.push(router.query?.callbackUrl || "/")
         return 
     }
