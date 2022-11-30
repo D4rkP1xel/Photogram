@@ -25,6 +25,8 @@ function SettingsPage() {
     const [imageToUpload, setImageToUpload] = useState(null)
     const [imageToPreview, setImageToPreview] = useState(null)
     const [isAvatarHovered, setAvatarHovered] = useState(false)
+    const [descriptionChanged, setDescriptionChanged] = useState(false)
+
     const { data: description } = useQuery(["user_description"], async () => {
         return axios.post("/user/getDescription", {
             user_id: userInfo.id
@@ -60,6 +62,7 @@ function SettingsPage() {
     function addCommentOnChange(e) {
 
         addDescription(e.target.value)
+        e.target.value !== description ? setDescriptionChanged(true) : setDescriptionChanged(false)
         changeTextAreaSize(e)
     }
 
