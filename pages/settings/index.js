@@ -24,7 +24,7 @@ function SettingsPage() {
     const uploadImageRef = useRef(null)
     const [imageToUpload, setImageToUpload] = useState(null)
     const [imageToPreview, setImageToPreview] = useState(null)
-
+    const [isAvatarHovered, setAvatarHovered] = useState(false)
     const { data: description } = useQuery(["user_description"], async () => {
         return axios.post("/user/getDescription", {
             user_id: userInfo.id
@@ -140,9 +140,12 @@ function SettingsPage() {
                                 {userInfo !== undefined ?
                                     <>
                                         <div>
-
-                                            <div onClick={() => uploadImageRef.current.click()} onMouseEnter={(e) => e.target.style.opacity = ".5"} onMouseLeave={(e) => e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
-                                                <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto z-10 opacity-100' />
+                                            <div className='pointer-events-none h-40 w-40 absolute'>
+                                                <BsPlusLg className={isAvatarHovered ? 'text-slate-800 h-12 w-12 mx-auto opacity-100 pointer-events-none'  : 'text-slate-800 h-12 w-12 mx-auto opacity-0 pointer-events-none'} />
+                                            </div>
+                                            
+                                            <div onClick={() => uploadImageRef.current.click()} onMouseEnter={() => setAvatarHovered(true)} onMouseLeave={() => setAvatarHovered(false)} className={isAvatarHovered ? 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-40 duration-100 ease-in' : 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-0 duration-100 ease-in'}>
+                                                
                                             </div>
                                             {imageToPreview === null ?
                                                 <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
