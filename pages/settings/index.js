@@ -140,8 +140,8 @@ function SettingsPage() {
                                 {userInfo !== undefined ?
                                     <>
                                         <div>
-                                            <div className='pointer-events-none h-40 w-40 absolute'>
-                                                <BsPlusLg className={isAvatarHovered ? 'text-slate-800 h-12 w-12 mx-auto opacity-100 pointer-events-none'  : 'text-slate-800 h-12 w-12 mx-auto opacity-0 pointer-events-none'} />
+                                            <div className='pointer-events-none h-40 w-40 absolute items-center flex'>
+                                                <BsPlusLg className={isAvatarHovered ? 'text-slate-800 h-12 w-12 mx-auto opacity-60 pointer-events-none'  : 'text-slate-800 h-12 w-12 mx-auto opacity-0 pointer-events-none'} />
                                             </div>
                                             
                                             <div onClick={() => uploadImageRef.current.click()} onMouseEnter={() => setAvatarHovered(true)} onMouseLeave={() => setAvatarHovered(false)} className={isAvatarHovered ? 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-40 duration-100 ease-in' : 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-0 duration-100 ease-in'}>
