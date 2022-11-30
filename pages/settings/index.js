@@ -18,10 +18,11 @@ function SettingsPage() {
         }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
     }, { enabled: !!session })
 
-    const descriptionTextAreaRef= useRef()
+    const descriptionTextAreaRef = useRef()
     const [optionPage, setOptionPage] = useState(1)
-
     const [descriptionText, addDescription] = useState("")
+    const uploadImageRef = useRef(null)
+    const [imageToUpload, setImageToUpload] = useState(null)
 
     const { data: description } = useQuery(["user_description"], async () => {
         return axios.post("/user/getDescription", {
@@ -118,6 +119,7 @@ function SettingsPage() {
                     :
                     optionPage === 2 ?
                         <>
+                            <input className='hidden' ref={uploadImageRef} type={"file"} onChange={(event) => handleChangeImage(event)} />
                             <div className='flex gap-4 mt-4'>
                                 <span className='shrink-0 w-36'>Change Username</span>
                                 <input className='w-full'></input>
@@ -127,10 +129,18 @@ function SettingsPage() {
                                 {userInfo !== undefined ?
                                     <>
                                         <div>
-                                            <div onMouseEnter={(e)=>e.target.style.opacity = ".5"} onMouseLeave={(e)=>e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
+
+                                            <div onClick={() => uploadImageRef.current.click()} onMouseEnter={(e) => e.target.style.opacity = ".5"} onMouseLeave={(e) => e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
                                                 <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto' />
                                             </div>
-                                            <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
+                                            {imageToUpload === null ?
+                                                <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
+                                                :
+                                                <div className='h-40 w-40 bg-no-repeat bg-center bg-cover' style={{ backgroundImage: `url('${imageToUpload}')` }}></div>
+                                            }
+
+
+
                                         </div>
                                     </>
                                     :
