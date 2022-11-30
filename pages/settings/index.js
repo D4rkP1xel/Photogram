@@ -38,7 +38,7 @@ function SettingsPage() {
     useEffect(() => {
         if (description !== undefined && descriptionTextAreaRef != null && optionPage === 1) {
 
-            addDescription(description)
+            descriptionChanged ? addDescription(descriptionText) : addDescription(description)
             setTimeout(() => {
                 descriptionTextAreaRef.current.style.height = "28px"
                 descriptionTextAreaRef.current.style.height = `${descriptionTextAreaRef.current.scrollHeight}px`
