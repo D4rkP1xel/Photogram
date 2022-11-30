@@ -147,7 +147,7 @@ function SettingsPage() {
                                             {imageToPreview === null ?
                                                 <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
                                                 :
-                                                <div className='h-40 w-40 bg-no-repeat bg-center bg-cover' style={{ backgroundImage: `url('${imageToUpload}')` }}></div>
+                                                <div className='h-40 w-40 bg-no-repeat bg-center bg-cover' style={{ backgroundImage: `url('${imageToPreview}')` }}></div>
                                             }
 
 
