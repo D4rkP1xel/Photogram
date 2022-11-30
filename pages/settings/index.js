@@ -47,7 +47,7 @@ function SettingsPage() {
         }
     }, [description, descriptionTextAreaRef, optionPage])
 
-    const { mutate } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: descriptionText }), {
+    const { mutate: mutateDescription } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: descriptionText }), {
         onMutate: (newDescription) => {
 
             queryClient.cancelQueries({ queryKey: ["user_description"] })
@@ -72,13 +72,25 @@ function SettingsPage() {
     }
 
     async function saveSettings() {
-        if (descriptionText.length > maxLength)
-            return alert("Description too long")
+        if (descriptionChanged === true) {
+            if (descriptionText.length > maxLength)
+                return alert("Description too long")
+        }
+        if (imageToUpload !== null) {
+            if (imageToUpload.size >= 3000000) {
+                alert("Image Size is too big")
+                return
+            }
+        }
+
         try {
-            if (description !== descriptionText) {
+            if (descriptionChanged === true) {
                 // await axios.post("/user/editDescription", {user_id: userInfo.id, description: descriptionText})
-                mutate(descriptionText)
+                mutateDescription(descriptionText)
                 //supposedly there should be a mutate modifying the query 
+            }
+            if (imageToUpload !== null) {
+                axios.post("/user/newAvatar", { user_id: userInfo.id, photo: imageToUpload })
             }
             alert("New settings saved")
         }
@@ -101,13 +113,14 @@ function SettingsPage() {
 
     function handleChangeImage(event) {
         setImageToUpload(event.target.files[0])
-    
+
         const reader = new FileReader()
         reader.readAsDataURL(event.target.files[0])
         reader.onloadend = () => {
-          setImageToPreview(reader.result)
+            setImageToPreview(reader.result)
+            setImageToUpload(reader.result)
         }
-      }
+    }
 
     function handleOption() {
 
@@ -144,11 +157,11 @@ function SettingsPage() {
                                     <>
                                         <div>
                                             <div className='pointer-events-none h-40 w-40 absolute items-center flex'>
-                                                <BsPlusLg className={isAvatarHovered ? 'text-slate-800 h-12 w-12 mx-auto opacity-40 pointer-events-none duration-100 ease-in'  : 'text-slate-800 h-12 w-12 mx-auto opacity-0 pointer-events-none duration-100 ease-in'} />
+                                                <BsPlusLg className={isAvatarHovered ? 'text-slate-800 h-12 w-12 mx-auto opacity-40 pointer-events-none duration-100 ease-in' : 'text-slate-800 h-12 w-12 mx-auto opacity-0 pointer-events-none duration-100 ease-in'} />
                                             </div>
-                                            
+
                                             <div onClick={() => uploadImageRef.current.click()} onMouseEnter={() => setAvatarHovered(true)} onMouseLeave={() => setAvatarHovered(false)} className={isAvatarHovered ? 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-40 duration-100 ease-in' : 'h-40 w-40 bg-slate-300 absolute cursor-pointer opacity-0 duration-100 ease-in'}>
-                                                
+
                                             </div>
                                             {imageToPreview === null ?
                                                 <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
