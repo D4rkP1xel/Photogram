@@ -142,7 +142,7 @@ function SettingsPage() {
                                         <div>
 
                                             <div onClick={() => uploadImageRef.current.click()} onMouseEnter={(e) => e.target.style.opacity = ".5"} onMouseLeave={(e) => e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
-                                                <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto' />
+                                                <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto z-10 opacity-100' />
                                             </div>
                                             {imageToPreview === null ?
                                                 <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
