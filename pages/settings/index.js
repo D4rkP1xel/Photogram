@@ -162,6 +162,7 @@ function SettingsPage() {
                                 }
 
                             </div>
+                            <div onClick={async () => await saveSettings()} className='ml-auto mt-auto rounded-full px-6 py-2 cursor-pointer duration-200 ease-in bg-blue-500 hover:bg-blue-600 w-fit text-white'>Save</div>
                         </>
                         :
                         ""
