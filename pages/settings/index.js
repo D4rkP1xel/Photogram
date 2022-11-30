@@ -23,6 +23,7 @@ function SettingsPage() {
     const [descriptionText, addDescription] = useState("")
     const uploadImageRef = useRef(null)
     const [imageToUpload, setImageToUpload] = useState(null)
+    const [imageToPreview, setImageToPreview] = useState(null)
 
     const { data: description } = useQuery(["user_description"], async () => {
         return axios.post("/user/getDescription", {
@@ -95,6 +96,16 @@ function SettingsPage() {
 
     }
 
+    function handleChangeImage(event) {
+        setImageToUpload(event.target.files[0])
+    
+        const reader = new FileReader()
+        reader.readAsDataURL(event.target.files[0])
+        reader.onloadend = () => {
+          setImageToPreview(reader.result)
+        }
+      }
+
     function handleOption() {
 
         return (
@@ -133,7 +144,7 @@ function SettingsPage() {
                                             <div onClick={() => uploadImageRef.current.click()} onMouseEnter={(e) => e.target.style.opacity = ".5"} onMouseLeave={(e) => e.target.style.opacity = "0"} className='h-40 w-40 bg-slate-300 absolute cursor-pointer flex items-center opacity-0 duration-100 ease-in'>
                                                 <BsPlusLg className='text-slate-800 h-12 w-12 mx-auto' />
                                             </div>
-                                            {imageToUpload === null ?
+                                            {imageToPreview === null ?
                                                 <img className='h-40 w-40' alt="" src={userInfo.photo_url} />
                                                 :
                                                 <div className='h-40 w-40 bg-no-repeat bg-center bg-cover' style={{ backgroundImage: `url('${imageToUpload}')` }}></div>
