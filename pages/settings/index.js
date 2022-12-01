@@ -16,7 +16,7 @@ function SettingsPage() {
             email: session.user.email,
             provider: session.provider
         }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
-    }, { enabled: !!session })
+    }, { enabled: !!session, refetchOnWindowFocus: false })
 
     const descriptionTextAreaRef = useRef()
     const [optionPage, setOptionPage] = useState(1)
@@ -26,6 +26,8 @@ function SettingsPage() {
     const [imageToPreview, setImageToPreview] = useState(null)
     const [isAvatarHovered, setAvatarHovered] = useState(false)
     const [descriptionChanged, setDescriptionChanged] = useState(false)
+    const [usernameText, setUsernameText] = useState("")
+    const [usernameChanged, setUsernameChanged] = useState(false)
 
     const { data: description } = useQuery(["user_description"], async () => {
         return axios.post("/user/getDescription", {
@@ -45,7 +47,11 @@ function SettingsPage() {
             }, 100);
 
         }
-    }, [description, descriptionTextAreaRef, optionPage])
+        if(optionPage === 2 && userInfo != null)
+        {
+            usernameChanged ? setUsernameText(usernameText) : setUsernameText(userInfo.username)
+        }
+    }, [description, descriptionTextAreaRef, optionPage, userInfo])
 
     const { mutate: mutateDescription } = useMutation(async () => await axios.post("/user/editDescription", { user_id: userInfo.id, description: descriptionText }), {
         onMutate: (newDescription) => {
@@ -57,12 +63,16 @@ function SettingsPage() {
     })
     const maxLength = 240
 
-
+    function handleChangeUsername(e) {
+        if(userInfo == null) return
+        setUsernameText(e.target.value)
+        e.target.value !== userInfo.username ? setUsernameChanged(true) : setUsernameChanged(false)
+    }
 
     function addCommentOnChange(e) {
 
         addDescription(e.target.value)
-        e.target.value !== description ? setDescriptionChanged(true) : setDescriptionChanged(false)
+        e.target.value !== userInfo.username ? setDescriptionChanged(true) : setDescriptionChanged(false)
         changeTextAreaSize(e)
     }
 
@@ -76,13 +86,23 @@ function SettingsPage() {
             if (descriptionText.length > maxLength)
                 return alert("Description too long")
         }
+        if(usernameChanged === true)
+        {
+            if(usernameText.length < 3)
+            {
+                return alert("Username too short")
+            }
+            if(usernameText.length > 40)
+            {
+                return alert("Username too long")
+            }
+        }
         if (imageToUpload !== null) {
             if (imageToUpload.size >= 3000000) {
                 alert("Image Size is too big")
                 return
             }
         }
-
         try {
             if (descriptionChanged === true) {
                 // await axios.post("/user/editDescription", {user_id: userInfo.id, description: descriptionText})
@@ -90,12 +110,17 @@ function SettingsPage() {
                 //supposedly there should be a mutate modifying the query 
             }
             if (imageToUpload !== null) {
-                axios.post("/user/newAvatar", { user_id: userInfo.id, photo: imageToUpload })
+                await axios.post("/user/newAvatar", { user_id: userInfo.id, photo: imageToUpload })
+            }
+            if(usernameChanged === true)
+            {
+                await axios.post("/user/newUsername", {user_id: userInfo.id, username: usernameText})
             }
             alert("New settings saved")
         }
         catch (err) {
             console.log(err)
+            alert("Error saving settings, try again later")
         }
     }
 
@@ -149,7 +174,7 @@ function SettingsPage() {
                             <input className='hidden' ref={uploadImageRef} type={"file"} onChange={(event) => handleChangeImage(event)} />
                             <div className='flex gap-4 mt-4'>
                                 <span className='shrink-0 w-36'>Change Username</span>
-                                <input className='w-full'></input>
+                                <input onChange={(e)=>handleChangeUsername(e)} value={usernameText} className='w-full'></input>
                             </div>
                             <div className='flex gap-4 mt-4 py-8'>
                                 <span className='shrink-0 w-36'>Change Avatar</span>
