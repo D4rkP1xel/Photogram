@@ -38,7 +38,6 @@ function Home() {
     const [commentText, addCommentText] = useState("")
 
     useEffect(() => {
-
         if (isShowPost != null)
             refetchComments()
 

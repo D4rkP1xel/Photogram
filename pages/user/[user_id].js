@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import Header from '../../components/header'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from '../../utils/axiosConfig'
 import { useSession } from 'next-auth/react'
 import ProfileContent from '../../components/profilePage/ProfileContent'
@@ -11,7 +11,7 @@ import checkSessionProvider from '../../utils/checkSessionProvider'
 function UserProfilePage() {
     const { data: session, status: sessionStatus } = useSession()
     const router = useRouter()
-
+    const queryClient = useQueryClient()
     const { user_id } = router.query
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
@@ -25,7 +25,11 @@ function UserProfilePage() {
     useEffect(() => {
         if (user_id)
             refreshData()
-    }, [user_id])
+        if(router.isReady && router.query.user_id !== undefined && userInfo !== undefined && queryClient.getQueryData(["user_info"]) === undefined)
+        {
+            router.push("/fix?profileid="+ user_id)
+        }
+    }, [user_id, router.isReady, queryClient.getQueryData(["user_info"]), userInfo ])
 
     function refreshData() {
         refreshProfileInfo()

@@ -40,7 +40,10 @@ function Header({ userInfo, searchQuery }) {
   }
   function handleSearch(e) {
     if (e.keyCode === 13 && searchBarText !== "") {
-      router.push("/search?q=" + searchBarText)
+      if(router.asPath.includes("/search?q"))
+        router.push("/fix?searchq=" + searchBarText)
+      else
+        router.push("/search?q=" + searchBarText)
     }
   }
   async function signOutHandler() {
@@ -58,7 +61,7 @@ function Header({ userInfo, searchQuery }) {
           </div>
 
           <div className='flex gap-4 items-center rounded-full border border-black py-1 px-2'>
-            <IoMdSearch onClick={()=>searchBarText !== "" ? router.push("/search?q=" + searchBarText) : null} className='h-6 w-auto cursor-pointer' />
+            <IoMdSearch onClick={()=>searchBarText !== "" ? router.asPath.includes("/search?q") ? router.push("/fix?searchq=" + searchBarText) : router.push("/search?q=" + searchBarText) : null} className='h-6 w-auto cursor-pointer' />
             <input ref={searchBarRef} onChange={handleChangeSearchBarText} value={searchBarText} onKeyDown={handleSearch} className='md:w-60 w-40 bg-transparent outline-none'></input>
           </div>
 

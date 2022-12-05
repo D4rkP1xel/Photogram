@@ -21,7 +21,7 @@ export default function SearchPage() {
       email: session.user.email,
       provider: session.provider
     }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
-  }, { enabled: !!session, refetchOnWindowFocus: false })
+  }, { enabled: !!session, refetchOnWindowFocus: false, keepPreviousData: true })
   const { data: posts, isFetching, refetch } = useQuery(["search_posts"], async () => { return getInfinitePosts(last_post_id) }, { enabled: !!userInfo && !!router.query.q, refetchOnWindowFocus: false })
   const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id, last_comment_id) : null }, { enabled: !!userInfo })
   
@@ -37,8 +37,14 @@ export default function SearchPage() {
     }
     if (isShowPost != null)
         refetchComments()
-  }, [router.query, router.isReady, isShowPost])
+  }, [router.query, router.isReady, isShowPost, router.query.q])
 
+useEffect(() => {
+if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefined && router.query.q !== null)
+{
+  router.push("/fix?searchq="+ router.query.q)
+}
+}, [posts, queryClient.getQueryData(["search_posts"]), router.query.q])
 
  
   async function getInfinitePosts(last_post_id_param) {
@@ -349,6 +355,8 @@ export default function SearchPage() {
         posts !== undefined ?
           <>
             <Header userInfo={userInfo} searchQuery={router.query.q} />
+            {/* <button onClick={()=>console.log(queryClient.getQueryData(["timeline_posts"]))}>queryclient</button>
+            <button onClick={()=>console.log(posts)}>posts</button> */}
             <div className='w-[500px] mx-auto'>
               {posts != null ?
                 posts.map((postInfo, index) => {
