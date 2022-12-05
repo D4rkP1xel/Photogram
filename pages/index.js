@@ -57,7 +57,7 @@ function Home() {
                     setHasCommentsNextPage(true)
             }
             else {
-                console.log("no new posts")
+                console.log("no new comments")
                 setHasCommentsNextPage(false)
             }
 
@@ -392,7 +392,7 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null }
+                                {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : hasNextPage ? null : posts?.length > 0 ? <div className='text-center text-slate-600 mt-8 mb-2'>no more posts</div> : <div className='text-center text-slate-600 mt-8 mb-2'>no posts</div>}
                             
                         </div>
                         

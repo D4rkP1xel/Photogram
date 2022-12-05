@@ -3,17 +3,15 @@ import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { IoMdSearch } from 'react-icons/io'
 
-function Header({ userInfo }) {
+function Header({ userInfo, searchQuery }) {
   const router = useRouter()
   const [isMenuOpened, openMenu] = useState(false)
   const pfIconRef = useRef()
   const searchBarRef = useRef()
   const [searchBarText, setSearchBarText] = useState("")
 
-  function handleChangeSearchBarText(e)
-  {
-    if(e.target.value.length <= 24)
-    {
+  function handleChangeSearchBarText(e) {
+    if (e.target.value.length <= 24) {
       setSearchBarText(e.target.value)
     }
   }
@@ -23,11 +21,15 @@ function Header({ userInfo }) {
     }
   };
   useEffect(() => {
-    document.addEventListener('click', handleClickOutside, true);
+    document.addEventListener('click', handleClickOutside, true)
+    if (searchQuery !== undefined) {
+      setSearchBarText(searchQuery)
+    }
     return () => {
-      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener('click', handleClickOutside, true)
     };
-  }, [])
+
+  }, [searchQuery])
 
   function handleOpenMenu() {
     if (isMenuOpened === false) {
@@ -36,11 +38,10 @@ function Header({ userInfo }) {
     }
     openMenu(false)
   }
-  function handleSearch(e)
-  {
-    if(e.keyCode === 13) { 
-      console.log('Enter key pressed')
-}
+  function handleSearch(e) {
+    if (e.keyCode === 13 && searchBarText !== "") {
+      router.push("/search?q=" + searchBarText)
+    }
   }
   async function signOutHandler() {
     const data = await signOut({ redirect: false, callbackUrl: "/signin" })
@@ -57,7 +58,7 @@ function Header({ userInfo }) {
           </div>
 
           <div className='flex gap-4 items-center rounded-full border border-black py-1 px-2'>
-            <IoMdSearch className='h-6 w-auto cursor-pointer' />
+            <IoMdSearch onClick={()=>searchBarText !== "" ? router.push("/search?q=" + searchBarText) : null} className='h-6 w-auto cursor-pointer' />
             <input ref={searchBarRef} onChange={handleChangeSearchBarText} value={searchBarText} onKeyDown={handleSearch} className='md:w-60 w-40 bg-transparent outline-none'></input>
           </div>
 
