@@ -47,6 +47,10 @@ function Home() {
         try {
             let res = await axios.post("/posts/getComments", { post_id: post_id_param , last_comment_id: last_comment_id_param })
             let commentsRead = res.data.comments
+            for(let com = 0; com<commentsRead.length; com++)
+            {
+                commentsRead[com]["show_replies"] = false
+            }
             if (commentsRead.length > 0) {
                 setLast_comment_id(commentsRead[commentsRead.length - 1].id)
                 //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
@@ -315,6 +319,7 @@ function Home() {
                                                                             <span>{toDate(comment.date)}</span>
                                                                             <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
                                                                         </div>
+                                                                        {comment.num_replies > 0 ? <div className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div> : null}
                                                                     </div>
                                                                 </div>
                                                             </div>
