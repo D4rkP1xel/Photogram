@@ -15,10 +15,13 @@ function ProfileContent({ profileInfo, userInfo, session }) {
     const followRef = useRef()
     const [hasNextPage, setHasNextPage] = useState(false)
     const [last_post_id, setLast_post_id] = useState(null)
+    const [, updateState] = useState();
+    const forceUpdate = useCallback(() => updateState({}), [])
 
     const { data: isFollowing } = useQuery(["isFollowing"], async () => { return axios.post("/user/getFollowing", { follower: userInfo.id, following: profileInfo.id }).then((res) => res.data.follows) }, { enabled: !!profileInfo && !!userInfo && profileInfo.id !== userInfo.id })
     const { data: posts, refetch, isFetching } = useQuery(['profile_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
+    const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id, last_comment_id) : null }, { enabled: !!userInfo, refetchOnWindowFocus: false })
 
     async function getInfinitePosts(last_post_id_param) {
         try {
@@ -89,7 +92,6 @@ function ProfileContent({ profileInfo, userInfo, session }) {
         }
         return null
     }
-    const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id, last_comment_id) : null }, { enabled: !!userInfo })
 
 
     const [last_comment_id, setLast_comment_id] = useState(null)
@@ -104,10 +106,33 @@ function ProfileContent({ profileInfo, userInfo, session }) {
 
     }, [isShowPost])
 
+    async function getReplies(comment_index) {
+        comments[comment_index].show_replies = true
+        if (comments[comment_index].replies === null) {
+            comments[comment_index].is_fetching_replies = true
+            forceUpdate()
+            comments[comment_index].replies = (await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: null })).data.comments
+            comments[comment_index].is_fetching_replies = false
+        }
+        else if(comments[comment_index].replies.length < comments[comment_index].num_replies) //more replies to fetch
+        {
+            comments[comment_index].is_fetching_replies = true
+            forceUpdate()
+            comments[comment_index].replies = [...comments[comment_index].replies, ...(await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: comments[comment_index].replies[comments[comment_index].replies.length-1].id })).data.comments]
+            comments[comment_index].is_fetching_replies = false
+        }
+        forceUpdate()
+    }
+
     async function getInfiniteComments(post_id_param, last_comment_id_param) {
         try {
             let res = await axios.post("/posts/getComments", { post_id: post_id_param, last_comment_id: last_comment_id_param })
             let commentsRead = res.data.comments
+            for (let com = 0; com < commentsRead.length; com++) {
+                commentsRead[com]["show_replies"] = false
+                commentsRead[com]["replies"] = null
+                commentsRead[com]["is_fetching_replies"] = false
+            }
             if (commentsRead.length > 0) {
                 setLast_comment_id(commentsRead[commentsRead.length - 1].id)
                 //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
@@ -318,9 +343,9 @@ function ProfileContent({ profileInfo, userInfo, session }) {
                                     </div>
 
                                 </div>
-                                {comments !== undefined ?
+                                {comments != null ?
                                     <div className='max-h-96 overflow-auto'>
-                                        {comments?.map((comment, index) => {
+                                        {comments.map((comment, index) => {
                                             return (
                                                 <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
                                                     <div className='flex gap-3 py-2'>
@@ -335,6 +360,38 @@ function ProfileContent({ profileInfo, userInfo, session }) {
                                                                             <span>{toDate(comment.date)}</span>
                                                                             <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
                                                                         </div>
+                                                                        {comment.num_replies > 0 ? comment.show_replies === false ?
+                                                                            <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div>
+                                                                            :
+                                                                            <>
+                                                                                <div onClick={() => { comments[index].show_replies = false; forceUpdate() }} className='mt-2 font-semibold text-gray-500 cursor-pointer'>close replies</div>
+                                                                                
+                                                                                {comment.replies != null ? comment.replies.map((reply, index) => {
+                                                                                    return (
+                                                                                        <div key={index} className='w-full '>
+                                                                                            <div className='flex gap-3 py-2'>
+                                                                                                <div className='w-full'>
+                                                                                                    <div className='flex gap-3'>
+                                                                                                        <img onClick={() => router.push("/user/" + reply.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={reply.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                                                                        <div className='gap-3 py-2'>
+                                                                                                            <span onClick={() => router.push("/user/" + reply.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2 text-black'>{reply.user_username}</span>
+                                                                                                            <span className='w-fit break-words whitespace-pre-wrap text-black font-normal text-base'>{reply.text}</span>
+                                                                                                            <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                                                                                <span>{toDate(reply.date)}</span>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )
+                                                                                }) : null}
+                                                                                {comments[index].is_fetching_replies === true ? <ScaleLoader className='w-fit scale-loader scale-75 mt-4' /> : null}
+                                                                                {comments[index].is_fetching_replies === false && comments[index].num_replies > comments[index].replies.length ?
+                                                                                    <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show more</div>
+                                                                                : null}
+                                                                            </>
+                                                                            : null}
                                                                     </div>
                                                                 </div>
                                                             </div>
