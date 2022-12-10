@@ -9,7 +9,7 @@ import { IoMdHeartEmpty, IoMdHeart, IoMdClose } from 'react-icons/io'
 import { BsChat } from 'react-icons/bs'
 import toDate from '../utils/toDate'
 import toNumLikes from '../utils/toNumLikes'
-import {ScaleLoader} from 'react-spinners'
+import { ScaleLoader } from 'react-spinners'
 import checkSessionProvider from '../utils/checkSessionProvider'
 
 function Home() {
@@ -19,16 +19,16 @@ function Home() {
 
     const { data: userInfo } = useQuery(["user_info"], async () => {
         return axios.post("/user/getUserInfo", {
-          email: session.user.email,
-          provider: session.provider
+            email: session.user.email,
+            provider: session.provider
         }).then((res) => checkSessionProvider(res.data.data, session.provider, router))
-      }, { enabled: !!session })
+    }, { enabled: !!session })
 
     const { data: posts, refetch, isFetching } = useQuery(['timeline_posts'], () => { return getInfinitePosts(last_post_id) },
         { enabled: !!session && !!userInfo, refetchOnWindowFocus: false })
 
-    const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id ,last_comment_id) : null }, { enabled: !!userInfo })
-   
+    const { data: comments, refetch: refetchComments, remove: removeComments, isFetching: isCommentsFetching } = useQuery(["comments"], async () => { return isShowPost != null ? getInfiniteComments(isShowPost.id, last_comment_id) : null }, { enabled: !!userInfo, refetchOnWindowFocus: false })
+
     const [hasNextPage, setHasNextPage] = useState(false)
     const [last_comment_id, setLast_comment_id] = useState(null)
     const [last_post_id, setLast_post_id] = useState(null)
@@ -36,6 +36,8 @@ function Home() {
     const [hasCommentsNextPage, setHasCommentsNextPage] = useState(false)
     const commentTextAreaRef = useRef()
     const [commentText, addCommentText] = useState("")
+    const [, updateState] = useState();
+    const forceUpdate = useCallback(() => updateState({}), [])
 
     useEffect(() => {
         if (isShowPost != null)
@@ -43,13 +45,33 @@ function Home() {
 
     }, [isShowPost])
 
+
+    async function getReplies(comment_index) {
+        comments[comment_index].show_replies = true
+        if (comments[comment_index].replies === null) {
+            comments[comment_index].is_fetching_replies = true
+            forceUpdate()
+            comments[comment_index].replies = (await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: null })).data.comments
+            comments[comment_index].is_fetching_replies = false
+        }
+        else if(comments[comment_index].replies.length < comments[comment_index].num_replies) //more replies to fetch
+        {
+            comments[comment_index].is_fetching_replies = true
+            forceUpdate()
+            comments[comment_index].replies = [...comments[comment_index].replies, ...(await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: comments[comment_index].replies[comments[comment_index].replies.length-1].id })).data.comments]
+            comments[comment_index].is_fetching_replies = false
+        }
+        forceUpdate()
+    }
+
     async function getInfiniteComments(post_id_param, last_comment_id_param) {
         try {
-            let res = await axios.post("/posts/getComments", { post_id: post_id_param , last_comment_id: last_comment_id_param })
+            let res = await axios.post("/posts/getComments", { post_id: post_id_param, last_comment_id: last_comment_id_param })
             let commentsRead = res.data.comments
-            for(let com = 0; com<commentsRead.length; com++)
-            {
+            for (let com = 0; com < commentsRead.length; com++) {
                 commentsRead[com]["show_replies"] = false
+                commentsRead[com]["replies"] = null
+                commentsRead[com]["is_fetching_replies"] = false
             }
             if (commentsRead.length > 0) {
                 setLast_comment_id(commentsRead[commentsRead.length - 1].id)
@@ -188,7 +210,7 @@ function Home() {
             alert("Comment length not permitted")
             return
         }
-        mutateNewComment({newComment: { date: new Date(), user_id: userInfo.id, text: commentText, user_photo_url: userInfo.photo_url, user_username: userInfo.username }, postIndex: isShowPost.index} )
+        mutateNewComment({ newComment: { date: new Date(), user_id: userInfo.id, text: commentText, user_photo_url: userInfo.photo_url, user_username: userInfo.username }, postIndex: isShowPost.index })
 
     }
 
@@ -198,14 +220,14 @@ function Home() {
     }
 
     const { mutate: mutateNewComment } = useMutation(addCommentMutation, {
-        onMutate: ({newComment, postIndex: index}) => {
+        onMutate: ({ newComment, postIndex: index }) => {
 
             queryClient.cancelQueries({ queryKey: ["comments"] })
             let currentPostInfo = queryClient.getQueryData(["timeline_posts"])[index]
             queryClient.setQueryData(["comments"], (prev) => { return [newComment, ...prev] })
             addCommentText("")
             currentPostInfo.num_comments++
-            if(isShowPost != null) //not needed yet but did it just in case I need it later
+            if (isShowPost != null) //not needed yet but did it just in case I need it later
             {
                 isShowPost.num_comments++
             }
@@ -229,12 +251,11 @@ function Home() {
         if (comment) intObserverComment.current.observe(comment)
     }, [isCommentsFetching, refetchComments, hasCommentsNextPage])
 
-    function resetComments()
-    {
+    function resetComments() {
         setShowPost(null)
         addCommentText("")
         removeComments()
-        setHasCommentsNextPage(false) 
+        setHasCommentsNextPage(false)
         lastCommentRef(null)
         setLast_comment_id(null)
     }
@@ -302,9 +323,9 @@ function Home() {
                                     </div>
 
                                 </div>
-                                {comments !== undefined ?
+                                {comments != null ?
                                     <div className='max-h-96 overflow-auto'>
-                                        {comments?.map((comment, index) => {
+                                        {comments.map((comment, index) => {
                                             return (
                                                 <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
                                                     <div className='flex gap-3 py-2'>
@@ -319,7 +340,38 @@ function Home() {
                                                                             <span>{toDate(comment.date)}</span>
                                                                             <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
                                                                         </div>
-                                                                        {comment.num_replies > 0 ? <div className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div> : null}
+                                                                        {comment.num_replies > 0 ? comment.show_replies === false ?
+                                                                            <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div>
+                                                                            :
+                                                                            <>
+                                                                                <div onClick={() => { comments[index].show_replies = false; forceUpdate() }} className='mt-2 font-semibold text-gray-500 cursor-pointer'>close replies</div>
+                                                                                
+                                                                                {comment.replies != null ? comment.replies.map((reply, index) => {
+                                                                                    return (
+                                                                                        <div key={index} className='w-full '>
+                                                                                            <div className='flex gap-3 py-2'>
+                                                                                                <div className='w-full'>
+                                                                                                    <div className='flex gap-3'>
+                                                                                                        <img onClick={() => router.push("/user/" + reply.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={reply.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                                                                        <div className='gap-3 py-2'>
+                                                                                                            <span onClick={() => router.push("/user/" + reply.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2 text-black'>{reply.user_username}</span>
+                                                                                                            <span className='w-fit break-words whitespace-pre-wrap text-black font-normal text-base'>{reply.text}</span>
+                                                                                                            <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                                                                                <span>{toDate(reply.date)}</span>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )
+                                                                                }) : null}
+                                                                                {comments[index].is_fetching_replies === true ? <ScaleLoader className='w-fit scale-loader scale-75 mt-4' /> : null}
+                                                                                {comments[index].is_fetching_replies === false && comments[index].num_replies > comments[index].replies.length ?
+                                                                                    <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show more</div>
+                                                                                : null}
+                                                                            </>
+                                                                            : null}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -328,7 +380,7 @@ function Home() {
                                                 </div>
                                             )
                                         })}
-                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null }
+                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null}
                                     </div>
                                     :
                                     ""
@@ -338,10 +390,10 @@ function Home() {
                     </div>
                     <div className='fixed w-full top-0 left-0 z-50'>
                         <div className='flex w-full'>
-                            <div onClick={() => resetComments() } className='h-16 w-16 ml-auto mt-2 mr-2 p-[12px] cursor-pointer text-slate-100'><IoMdClose className='h-full w-auto' /></div>
+                            <div onClick={() => resetComments()} className='h-16 w-16 ml-auto mt-2 mr-2 p-[12px] cursor-pointer text-slate-100'><IoMdClose className='h-full w-auto' /></div>
                         </div>
                     </div>
-                    <div onClick={() => resetComments() } className='fixed top-0 left-0 w-full h-screen bg-black opacity-50 z-40'></div>
+                    <div onClick={() => resetComments()} className='fixed top-0 left-0 w-full h-screen bg-black opacity-50 z-40'></div>
 
                 </>
 
@@ -396,17 +448,17 @@ function Home() {
                                     )
                                 })
                                 : ""}
-                                {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : hasNextPage ? null : posts?.length > 0 ? <div className='text-center text-slate-600 mt-8 mb-2'>no more posts</div> : <div className='text-center text-slate-600 mt-8 mb-2'>no posts</div>}
-                            
+                            {isFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : hasNextPage ? null : posts?.length > 0 ? <div className='text-center text-slate-600 mt-8 mb-2'>no more posts</div> : <div className='text-center text-slate-600 mt-8 mb-2'>no posts</div>}
+
                         </div>
-                        
+
                         {posts != null ? showPost() : ""}
 
                     </>
                     :
                     sessionStatus === "unauthorized" || !session ?
-                        <HeaderNotLogged /> 
-                    :
+                        <HeaderNotLogged />
+                        :
                         <Header userInfo={userInfo} />
             }
         </>
