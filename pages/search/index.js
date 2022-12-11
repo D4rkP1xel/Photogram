@@ -152,6 +152,11 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
     try {
       let res = await axios.post("/posts/getComments", { post_id: post_id_param, last_comment_id: last_comment_id_param })
       let commentsRead = res.data.comments
+      for (let com = 0; com < commentsRead.length; com++) {
+        commentsRead[com]["show_replies"] = false
+        commentsRead[com]["replies"] = null
+        commentsRead[com]["is_fetching_replies"] = false
+    }
       if (commentsRead.length > 0) {
         setLast_comment_id(commentsRead[commentsRead.length - 1].id)
         //console.log(last_post_id_param +" new last_post_id: " + postsRead[postsRead.length-1].id)
@@ -161,7 +166,7 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
           setHasCommentsNextPage(true)
       }
       else {
-        console.log("no new posts")
+        //console.log("no new posts")
         setHasCommentsNextPage(false)
       }
 
@@ -176,10 +181,32 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
     }
   }
 
+  async function getReplies(comment_index) {
+    comments[comment_index].show_replies = true
+    if (comments[comment_index].replies === null) {
+        comments[comment_index].is_fetching_replies = true
+        forceUpdate()
+        comments[comment_index].replies = (await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: null })).data.comments
+        comments[comment_index].is_fetching_replies = false
+    }
+    else if(comments[comment_index].replies.length < comments[comment_index].num_replies) //more replies to fetch
+    {
+        comments[comment_index].is_fetching_replies = true
+        forceUpdate()
+        comments[comment_index].replies = [...comments[comment_index].replies, ...(await axios.post("/posts/getCommentReplies", { comment_id: comments[comment_index].id, last_reply_id: comments[comment_index].replies[comments[comment_index].replies.length-1].id })).data.comments]
+        comments[comment_index].is_fetching_replies = false
+    }
+    forceUpdate()
+}
+
   const [hasCommentsNextPage, setHasCommentsNextPage] = useState(false)
   const commentTextAreaRef = useRef()
   const [commentText, addCommentText] = useState("")
   const [last_comment_id, setLast_comment_id] = useState(null)
+  const [, updateState] = useState();
+    const forceUpdate = useCallback(() => updateState({}), [])
+  const [commentToReplyIndex, setCommentToReplyIndex] = useState(null)
+
   function postComment() {
     if (userInfo == null)
       return
@@ -188,18 +215,20 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
       alert("Comment length not permitted")
       return
     }
-    mutateNewComment({ newComment: { date: new Date(), user_id: userInfo.id, text: commentText, user_photo_url: userInfo.photo_url, user_username: userInfo.username }, postIndex: isShowPost.index })
+    mutateNewComment({ newComment: { date: new Date(), user_id: userInfo.id, text: commentText, user_photo_url: userInfo.photo_url, user_username: userInfo.username }, index: commentToReplyIndex === null ? isShowPost.index : commentToReplyIndex, isFromPost: commentToReplyIndex === null ? true : false })
 
   }
 
   async function addCommentMutation() {
     if (isShowPost != null && userInfo != null)
-      return await axios.post("/posts/addComment", { parentId: isShowPost.id, isFromPost: true, comment: commentText, user_id: userInfo.id })
-  }
+        return commentToReplyIndex !== null ? await axios.post("/posts/addComment", { parentId: comments[commentToReplyIndex].id, isFromPost: false, comment: commentText, user_id: userInfo.id }) 
+        : await axios.post("/posts/addComment", { parentId: isShowPost.id, isFromPost: true, comment: commentText, user_id: userInfo.id })
+}
 
   const { mutate: mutateNewComment } = useMutation(addCommentMutation, {
-    onMutate: ({ newComment, postIndex: index }) => {
-
+    onMutate: ({ newComment, index: index, isFromPost }) => {
+      if(isFromPost === true)
+      {
       queryClient.cancelQueries({ queryKey: ["comments"] })
       let currentPostInfo = queryClient.getQueryData(["search_posts"])[index]
       queryClient.setQueryData(["comments"], (prev) => { return [newComment, ...prev] })
@@ -209,6 +238,19 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
       {
         isShowPost.num_comments++
       }
+    }
+    else
+            {
+                queryClient.cancelQueries({ queryKey: ["comments"] })
+                let currentCommentInfo = queryClient.getQueryData(["comments"])[index]
+                addCommentText("")
+                if(currentCommentInfo.replies !== null)
+                {
+                    currentCommentInfo.replies.unshift(newComment)
+                }
+                currentCommentInfo.num_replies++
+                setCommentToReplyIndex(null)
+            }
     }//maybe do the onError
 
   })
@@ -236,6 +278,7 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
     setHasCommentsNextPage(false)
     lastCommentRef(null)
     setLast_comment_id(null)
+    setCommentToReplyIndex(null)
   }
   function showPost() {
     const html = document.querySelector('html');
@@ -281,13 +324,14 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
                   </div>
                 </div>
                 <hr className='md:max-w-[600px] sm:mx-auto w-full my-2' />
-                <div className='flex gap-3 py-2'>
+                <div className='flex gap-3 pb-2 pt-4'>
                   <div className='flex items-center gap-3 flex-shrink-0 h-fit'>
                     <img className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={userInfo?.photo_url} alt="" referrerPolicy="no-referrer" />
                     <div>
                       <div className='font-medium text-sm cursor-pointer'>{userInfo?.username}</div>
                     </div>
                   </div>
+                  {commentToReplyIndex !== null ? <div className='relative'><div className='w-60 absolute font-thin text-gray-500 left-3 bottom-9 text-sm select-none'>replying to: <span className='font-normal text-black'>{comments[commentToReplyIndex].user_username}</span></div> </div>: null}
                   <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
                   <div className='font-semibold text-gray-500  mt-2 mb-auto select-none'>
                     {commentText.length <= 400 ?
@@ -301,37 +345,68 @@ if(posts !== undefined && queryClient.getQueryData(["search_posts"]) === undefin
                   </div>
 
                 </div>
-                {comments !== undefined ?
-                  <div className='max-h-96 overflow-auto'>
-                    {comments?.map((comment, index) => {
-                      return (
-                        <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
-                          <div className='flex gap-3 py-2'>
-                            <div className='w-full'>
-                              <div className='flex gap-3'>
-                                <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
-                                <div className='gap-3 py-2'>
-                                  <span onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{comment.user_username}</span>
-                                  <span className='w-fit break-words whitespace-pre-wrap'>{comment.text}</span>
-                                  <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
-                                    <div className='flex gap-2'>
-                                      <span>{toDate(comment.date)}</span>
-                                      <span className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                {comments != null ?
+                                    <div className='max-h-96 overflow-auto'>
+                                        {comments.map((comment, index) => {
+                                            return (
+                                                <div key={index} ref={index === comments.length - 1 ? lastCommentRef : null} className='md:max-w-[600px] sm:mx-auto w-full '>
+                                                    <div className='flex gap-3 py-2'>
+                                                        <div className='w-full'>
+                                                            <div className='flex gap-3'>
+                                                                <img onClick={() => router.push("/user/" + comment.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={comment.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                                <div className='gap-3 py-2'>
+                                                                    <span onClick={() => router.push("/user/" + comment.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2'>{comment.user_username}</span>
+                                                                    <span className='w-fit break-words whitespace-pre-wrap'>{comment.text}</span>
+                                                                    <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                                        <div className='flex gap-2'>
+                                                                            <span>{toDate(comment.date)}</span>
+                                                                            <span onClick={()=>setCommentToReplyIndex(index)} className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                                                        </div>
+                                                                        {comment.num_replies > 0 ? comment.show_replies === false ?
+                                                                            <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div>
+                                                                            :
+                                                                            <>
+                                                                                <div onClick={() => { comments[index].show_replies = false; forceUpdate() }} className='mt-2 font-semibold text-gray-500 cursor-pointer'>close replies</div>
+                                                                                
+                                                                                {comment.replies != null ? comment.replies.map((reply, index) => {
+                                                                                    return (
+                                                                                        <div key={index} className='w-full '>
+                                                                                            <div className='flex gap-3 py-2'>
+                                                                                                <div className='w-full'>
+                                                                                                    <div className='flex gap-3'>
+                                                                                                        <img onClick={() => router.push("/user/" + reply.user_id)} className="h-10 rounded-full cursor-pointer select-none" draggable="false" src={reply.user_photo_url} alt="" referrerPolicy="no-referrer" />
+                                                                                                        <div className='gap-3 py-2'>
+                                                                                                            <span onClick={() => router.push("/user/" + reply.user_id)} className='font-medium text-sm cursor-pointer h-fit mr-2 text-black'>{reply.user_username}</span>
+                                                                                                            <span className='w-fit break-words whitespace-pre-wrap text-black font-normal text-base'>{reply.text}</span>
+                                                                                                            <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
+                                                                                                                <span>{toDate(reply.date)}</span>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    )
+                                                                                }) : null}
+                                                                                {comments[index].is_fetching_replies === true ? <ScaleLoader className='w-fit scale-loader scale-75 mt-4' /> : null}
+                                                                                {comments[index].is_fetching_replies === false && comments[index].num_replies > comments[index].replies.length ?
+                                                                                    <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show more</div>
+                                                                                : null}
+                                                                            </>
+                                                                            : null}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                        {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : null}
                                     </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                    {isCommentsFetching ? <ScaleLoader className='mx-auto w-fit scale-loader scale-75 mt-4' /> : hasCommentsNextPage ? null : comments?.length > 0 ? null : <div className='text-center text-slate-600 mt-8 mb-2 text-xs'>no comments</div>}
-            
-                  </div>
-                  :
-                  ""
-                }
+                                    :
+                                    ""
+                                }
               </div>
             </div>
           </div>
