@@ -52,7 +52,7 @@ function Header({ userInfo, searchQuery }) {
   }
   return (
     <>
-      <div className="z-20 h-20 w-screen fixed bg-slate-100 flex justify-center">
+      <div className="z-20 h-20 w-screen fixed bg-neutral-100 shadow-md flex justify-center">
         <div className='flex lg:w-8/12 w-10/12 h-full items-center justify-between'>
           <div onClick={() => router.push("/")} className='flex items-center cursor-pointer '>
             <div className='gap-6 flex items-center'>

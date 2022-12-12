@@ -8,7 +8,7 @@ function HeaderNotLogged() {
     }
   return (
     <>
-      <div className="z-20 h-20 w-screen fixed bg-slate-100 flex justify-center">
+      <div className="z-20 h-20 w-screen fixed shadow-md  bg-neutral-100 flex justify-center">
         <div className='flex w-8/12 h-full items-center'>
           <div onClick={()=>router.push("/")} className='flex items-center gap-6 cursor-pointer'><img className='h-14' src="/instagram-logo.png"/><span className="font-semibold text-xl">PHOTOGRAM</span></div>
           <div className='ml-auto'>
