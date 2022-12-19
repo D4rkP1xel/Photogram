@@ -301,8 +301,8 @@ function ProfileContent({ profileInfo, userInfo, session }) {
             (
                 <>
 
-                    <div className='z-50 fixed top-0 left-0 w-full pointer-events-none'>
-                        <div className=' lg:w-[1000px] w-full lg:max-h-[600px] mx-auto mt-24 lg:flex lg:gap-2 bg-white pointer-events-auto pb-4'>
+                    <div className='z-50 fixed top-0 left-0 w-screen h-screen overflow-auto'>
+                        <div className=' lg:w-[1000px] w-full md:w-[600px] lg:max-h-[600px] mx-auto mt-24 lg:flex lg:gap-2 bg-white pointer-events-auto pb-4'>
                             <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
                                 <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${isShowPost.photo_url}')` }}></div>
                                 <div className='flex px-4 pt-3'>
@@ -344,7 +344,7 @@ function ProfileContent({ profileInfo, userInfo, session }) {
                                             <div className='font-medium text-sm cursor-pointer'>{userInfo?.username}</div>
                                         </div>
                                     </div>
-                                    {commentToReplyIndex !== null ? <div className='relative'><div className='w-60 absolute font-thin text-gray-500 left-3 bottom-9 text-sm select-none'>replying to: <span className='font-normal text-black'>{comments[commentToReplyIndex].user_username}</span></div> </div>: null}
+                                    {commentToReplyIndex !== null ? <div className='relative'><div className='w-60 absolute font-thin text-gray-500 left-3 bottom-9 text-sm select-none'>replying to: <span className='font-normal text-black'>{comments[commentToReplyIndex].user_username}</span></div> </div> : null}
                                     <textarea ref={commentTextAreaRef} onChange={addCommentOnChange} value={commentText} className='overflow-hidden border-b border-slate-400 w-full h-[28px] pb-1 mt-2'></textarea>
                                     <div className='font-semibold text-gray-500  mt-2 mb-auto select-none'>
                                         {commentText.length <= 400 ?
@@ -373,7 +373,7 @@ function ProfileContent({ profileInfo, userInfo, session }) {
                                                                     <div className='select-none text-gray-400 text-[10px] tracking-wide mt-1'>
                                                                         <div className='flex gap-2'>
                                                                             <span>{toDate(comment.date)}</span>
-                                                                            <span onClick={()=>setCommentToReplyIndex(index)} className='font-semibold text-gray-500 cursor-pointer'>reply</span>
+                                                                            <span onClick={() => setCommentToReplyIndex(index)} className='font-semibold text-gray-500 cursor-pointer'>reply</span>
                                                                         </div>
                                                                         {comment.num_replies > 0 ? comment.show_replies === false ?
                                                                             <div onClick={() => getReplies(index)} className='mt-2 font-semibold text-gray-500 cursor-pointer'>show replies ({comment.num_replies})</div>

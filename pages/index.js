@@ -285,8 +285,8 @@ function Home() {
             (
                 <>
 
-                    <div className='z-50 fixed top-0 left-0 w-full pointer-events-none'>
-                        <div className=' lg:w-[1000px] w-full lg:max-h-[600px] mx-auto mt-24 lg:flex lg:gap-2 bg-white pointer-events-auto pb-4'>
+                    <div className='z-50 fixed top-0 left-0 w-screen h-screen overflow-auto'>
+                        <div className=' lg:w-[1000px] w-full md:w-[600px] lg:max-h-[600px] mx-auto mt-24 lg:flex lg:gap-2 bg-white pointer-events-auto pb-4'>
                             <div className='lg:w-full md:w-[600px] w-full mx-auto aspect-square'>
                                 <div className={'w-full aspect-square bg-no-repeat bg-center bg-cover'} style={{ backgroundImage: `url('${isShowPost.photo_url}')` }}></div>
                                 <div className='flex px-4 pt-3'>
